@@ -1,5 +1,6 @@
 import ipaddress
 import logging
+import os
 import random
 import re
 import subprocess
@@ -10,14 +11,18 @@ import meta
 
 log = logging.getLogger(__name__)
 
+#
+# Utils
+#
+
 
 def sh(*args, **kwargs):
     kwargs.setdefault("stdout", subprocess.PIPE)
     kwargs.setdefault("stderr", subprocess.PIPE)
     kwargs.setdefault("check", True)
     if len(args) == 1 and isinstance(args[0], str):
-        args = ["bash", "-c", args[0]]
-    return subprocess.run(args, **kwargs)
+        args = [["bash", "-c", args[0]]]
+    return subprocess.run(*args, **kwargs)
 
 
 def get_qemu_archs():
@@ -69,14 +74,28 @@ def list_interfaces(exclude_bridge: bool = True):
     return all_ifaces - bridges
 
 
-ip_addr_iface_ip = re.compile(r"inet\s+(.+)\s+brd")
-ip_addr_iface_mac = re.compile(r"link/ether\s+(.+)\s+brd")
+def list_nameservers():
+    ret = sh("grep nameserver /etc/resolv.conf | sed 's/nameserver //'")
+    return [i.strip() for i in ret.stdout.decode().splitlines()]
 
 
-def _setup_tap_bridge(iface, dev_name, mac):
+def get_default_route():
+    ret = sh("ip route | grep default | awk '{print $3}'")
+    return ret.stdout.decode().strip()
+
+
+def get_hostname():
+    return sh("hostname -s").stdout.decode().strip()
+
+
+#
+# VM Setup
+#
+
+
+def _setup_tap_bridge(iface, dev_name):
     sh(f"brctl addbr {dev_name}")
     sh(f"brctl addif {dev_name} {iface}")
-    sh(f"ip link set {dev_name} address {mac}")
     # reset mtu (mtu will be 65535 in macos docker desktop?)
     sh(f"ip link set dev {dev_name} mtu 1500")
     # write bridge.conf
@@ -84,8 +103,9 @@ def _setup_tap_bridge(iface, dev_name, mac):
     sh(f"mkdir {conf_dir}")
     sh(f"echo allow {dev_name} >> {conf_dir}/bridge.conf")
     # mknod /dev/net/tun
-    sh("mkdir -m 755 /dev/net")
-    sh("mknod -m 666 /dev/net/tun c 10 200")
+    if not os.path.exists("/dev/net/tun"):
+        sh("mkdir -m 755 /dev/net")
+        sh("mknod -m 666 /dev/net/tun c 10 200")
 
 
 def _setup_macvlan_bridge(iface, dev_name, dev_id, mac):
@@ -107,16 +127,14 @@ def _setup_macvlan_bridge(iface, dev_name, dev_id, mac):
 
 
 def setup_bridge(
-    iface: str, mode: meta.NetworkMode, mac: str, ip: str, cidr: str, index: int
+    iface: str, mode: meta.NetworkMode, mac: str, ip_cidr: str | None, index: int
 ):
     dev_name, dev_id = gen_netdev_name(mode, list_interfaces(False))
-    # mknod /dev/vhost-net
-    sh("mknod -m 660 /dev/vhost-net c 10 238")
     fd = 10 + index * 10
     vhost_fd = fd + 1
     nic_id = "nic" + str(index)
     if mode == meta.NetworkMode.TAP_BRIDGE:
-        _setup_tap_bridge(iface, dev_name, mac)
+        _setup_tap_bridge(iface, dev_name)
         meta.config.qemu.append(
             {
                 "netdev": {
@@ -129,6 +147,9 @@ def setup_bridge(
         )
     else:
         vtapdev = _setup_macvlan_bridge(iface, dev_name, dev_id, mac)
+        # mknod /dev/vhost-net
+        if not os.path.exists("/dev/vhost-net"):
+            sh("mknod -m 660 /dev/vhost-net c 10 238")
         meta.config.qemu.append(
             {
                 "netdev": {
@@ -145,38 +166,40 @@ def setup_bridge(
         meta.config.qemu.ext_args.append(f"{vhost_fd}<>/dev/vhost-net")
 
     # get a new IP for the guest machine in a broader network broadcast domain
-    new_ip, new_cidr = gen_non_conflicting_ip(ip, int(cidr))
-    sh(f"ip address del {ip}/{cidr} dev {iface}")
-    sh(f"ip address add {new_ip}/{new_cidr} dev {dev_name}")
+    if ip_cidr:
+        ip, cidr = ip_cidr.split("/")
+        new_ip, new_cidr = gen_non_conflicting_ip(ip, int(cidr))
+        sh(f"ip address del {ip}/{cidr} dev {iface}")
+        sh(f"ip address add {new_ip}/{new_cidr} dev {dev_name}")
     sh(f"ip link set dev '{dev_name}' up")
     return dev_name, dev_id
 
 
-def configure_network():
-    c = meta.config
-    ifaces = list_interfaces()
+ip_addr_iface_ip = re.compile(r"inet\s+(.+)\s+brd")
+ip_addr_iface_mac = re.compile(r"link/ether\s+(.+)\s+brd")
 
+
+def configure_network() -> dict[str, tuple[str, str]]:
+    c = meta.config
+    nics = {}
+
+    ifaces = list_interfaces()
     mode = meta.NetworkMode.MACVLAN if c.enable_macvlan else meta.NetworkMode.TAP_BRIDGE
     for i, iface in enumerate(ifaces):
         # get iface info
         ret = sh(f"ip address show dev {iface}")
         info = ret.stdout.decode()
-        ips = ip_addr_iface_ip.findall(info)
-        if not ips:
-            return
+        ip_cidr_list = ip_addr_iface_ip.findall(info)  # ip/cidr
         if c.networks:
-            ips = list(
+            ip_cidr_list = list(
                 filter(
                     lambda x: any(
                         ipaddress.ip_address(x.split("/")[0]) in n for n in c.networks
                     ),
-                    ips,
+                    ip_cidr_list,
                 )
             )
-            if not ips:
-                log.info(f"cannot find ip in {c.networks} for {iface}, ignored")
-                return
-        ip, cidr = ips[0].split("/")
+        ip_cidr = ip_cidr_list[0] if ip_cidr_list else None
         # get mac
         macs = ip_addr_iface_mac.findall(info)
         if not macs:
@@ -189,24 +212,63 @@ def configure_network():
         sh(f"ip link set {iface} address {gen_random_mac()}")
         sh(f"ip link set {iface} up")
 
-        dev_name, dev_id = setup_bridge(iface, mode, mac, ip, cidr, i)
+        dev_name, dev_id = setup_bridge(iface, mode, mac, ip_cidr, i)
         # add device
         c.qemu.append(
             {"device": {"virtio-net-pci": {"netdev": "nic" + str(i), "mac": mac}}}
         )
+        nics[iface] = (ip_cidr, mac)
+    return nics
 
 
-# def configure_storage():
-#     c = meta.config
-#     pass
+def configure_dhcp(
+    gw: ipaddress.IPv4Address | ipaddress.IPv6Address,
+    nics: dict[str, tuple[str, str]],
+):
+    network = None
+    for v in nics.values():
+        n = ipaddress.ip_network(v[0], strict=False)
+        if gw not in n:
+            continue
+        network = n
+        mac = v[1]
+        ip, _ = v[0].split("/")
+        ip = ipaddress.ip_address(ip)
+    if not network:
+        raise EnvironmentError(f"cannot find network for {gw}")
 
-
-def configure_vnc():
-    c = meta.config
-    pass
+    # ipv4 only
+    if (
+        isinstance(gw, ipaddress.IPv6Address)
+        or isinstance(network, ipaddress.IPv6Network)
+        or isinstance(ip, ipaddress.IPv6Address)
+    ):
+        raise NotImplementedError(
+            "ipv6 is not supported yet, consider run with '--no-dhcp'"
+        )
+    log_file = "/var/log/dnsmasq.log"
+    dnsmasq_opts = [
+        "--log-queries",
+        f"--log-facility={log_file}",
+        f"--dhcp-range={ip},{ip}",
+        f"--dhcp-host={mac},{ip},infinite",
+        f"--dhcp-option=option:netmask,{network.netmask}",
+        f"--dhcp-option=option:dns-server,{','.join(list_nameservers())}",
+        f"--dhcp-option=option:router,{gw}",
+    ]
+    log.info(dnsmasq_opts)
+    sh(["dnsmasq", *dnsmasq_opts])
 
 
 def configure_monitor():
+    c = meta.config
+    if not c.enable_monitor:
+        return
+    c.qemu.append({"monitor": "tcp:127.0.0.1:10000,server,nowait"})
+    c.qemu.append({"qmp": "tcp:127.0.0.1:10001,server,nowait"})
+
+
+def configure_vnc():
     c = meta.config
     pass
 
@@ -227,14 +289,14 @@ def run_qemu():
     if c.iso:
         c.qemu.append({"cdrom": str(c.iso)})
     # network
-    log.info("Configuring network ...")
-    configure_network()
-    # storage
-    # configure_storage()
-    # vnc
-    configure_vnc()
+    gw = ipaddress.ip_address(get_default_route())
+    nics = configure_network()
+    # dhcp
+    configure_dhcp(gw, nics)
     # monitor
     configure_monitor()
+    # vnc
+    configure_vnc()
 
     # run qemu
     cmd = f"qemu-system-{c.arch} {c.qemu.to_args()}"

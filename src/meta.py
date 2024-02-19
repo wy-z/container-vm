@@ -96,14 +96,13 @@ class Config(pydantic.BaseModel):
     arch: str = "x86_64"
     cpu_num: int | None = None
     mem_size: int | None = None
-    disk_size: str | None = None
     iso: pathlib.Path | None = None
     enable_kvm: bool = True
     enable_macvlan: bool = True
     enable_dhcp: bool = True
     enable_vnc: bool = True
     enable_vnc_web: bool = True
-    enable_telnet: bool = True
+    enable_monitor: bool = True
     networks: list[ipaddress.IPv4Network | ipaddress.IPv6Network] = []
 
     def __init__(self, *args, **kwargs):

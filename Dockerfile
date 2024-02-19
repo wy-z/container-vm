@@ -5,6 +5,7 @@ ENV NOVNC_VERSION 1.4.0
 
 RUN apt update \
     && apt --no-install-recommends -y install \
+    tini \
     qemu-system \
     wget \
     swtpm \

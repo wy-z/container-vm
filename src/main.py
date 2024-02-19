@@ -27,13 +27,12 @@ def main(
     iso: pathlib.Path = typer.Option(default=None, help="ISO file path"),
     kvm: bool = typer.Option(default=True, help="Enable KVM"),
     macvlan: bool = typer.Option(
-        default=True, help="Enable macvlan network, otherwise use bridge network"
+        default=False, help="Enable macvlan network, otherwise use bridge network"
     ),
     dhcp: bool = typer.Option(default=True, help="Enable DHCP"),
     vnc: bool = typer.Option(default=True, help="Enable VNC"),
     vnc_web: bool = typer.Option(default=True, help="Enable VNC web client (noVNC)"),
-    telnet: bool = typer.Option(default=True, help="Enable telnet monitor"),
-    disk_size: str = typer.Option("16G", help="Initial data disk size"),
+    monitor: bool = typer.Option(default=True, help="Enable tcp monitor"),
     networks: list[str] = typer.Option(
         [],
         "--network",
@@ -50,8 +49,7 @@ def main(
         enable_dhcp=dhcp,
         enable_vnc=vnc,
         enable_vnc_web=vnc_web,
-        enable_telnet=telnet,
-        disk_size=disk_size,
+        enable_monitor=monitor,
         networks=[ipaddress.ip_network(n) for n in networks],
     )
     # start kvm
