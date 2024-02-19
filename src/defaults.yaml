@@ -1,0 +1,6 @@
+---
+qemu:
+  - serial: mon:stdio
+    nodefaults: true
+    msg:
+      timestamp: on
