@@ -13,8 +13,11 @@ RUN apt update \
     iproute2 \
     dnsmasq \
     net-tools \
+    bridge-utils \
     netcat-openbsd \
+    inetutils-ping \
     caddy \
+    telnet \
     && apt clean \
     && mkdir -p $NOVNC_DIR \
     && wget https://github.com/novnc/noVNC/archive/refs/tags/v"$NOVNC_VERSION".tar.gz -O /tmp/novnc.tar.gz -q \

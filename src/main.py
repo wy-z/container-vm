@@ -31,11 +31,18 @@ def main(
     ),
     dhcp: bool = typer.Option(default=True, help="Enable DHCP"),
     vnc_web: bool = typer.Option(default=True, help="Enable VNC web client (noVNC)"),
-    monitor: bool = typer.Option(default=True, help="Enable tcp monitor"),
+    console: bool = typer.Option(
+        default=True, help="Enable Qemu monitor (mon+telnet+qmp)"
+    ),
+    ifaces: list[str] = typer.Option(
+        [],
+        "--iface",
+        help="(multiple) Special VM network interface (e.g. eth1)",
+    ),
     networks: list[str] = typer.Option(
         [],
         "--network",
-        help="(multiple) Special VM network CIDR (e.g. 192.168.1.0/24), useful when launching the container with `net=host` flag",
+        help="(multiple) Special VM network CIDR (IPv4) (e.g. 192.168.1.0/24)",
     ),
 ):
     meta.config.update(
@@ -47,8 +54,9 @@ def main(
         enable_macvlan=macvlan,
         enable_dhcp=dhcp,
         enable_vnc_web=vnc_web,
-        enable_monitor=monitor,
-        networks=[ipaddress.ip_network(n) for n in networks],
+        enable_console=console,
+        ifaces=ifaces,
+        networks=[ipaddress.IPv4Network(n) for n in networks],
     )
     # start kvm
     vm.run_qemu()

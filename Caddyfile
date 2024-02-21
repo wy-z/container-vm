@@ -1,6 +1,6 @@
 :8080 {
 	file_server {
-        root {$VNC:/opt/noVNC}
+		root {$VNC:/opt/noVNC}
 		index vnc.html
 	}
 
@@ -10,5 +10,10 @@
 	}
 	redir @root /?resize=scale&autoconnect=true
 
-	reverse_proxy /websockify http://127.0.0.1:5800
+	@ws {
+		header Connection *Upgrade*
+		header Upgrade websocket
+	}
+	reverse_proxy @ws http://127.0.0.1:5800
+	rewrite /websockify /
 }

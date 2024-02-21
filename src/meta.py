@@ -104,8 +104,9 @@ class Config(pydantic.BaseModel):
     enable_macvlan: bool = True
     enable_dhcp: bool = True
     enable_vnc_web: bool = True
-    enable_monitor: bool = True
-    networks: list[ipaddress.IPv4Network | ipaddress.IPv6Network] = []
+    enable_console: bool = True
+    ifaces: list[str] = []
+    networks: list[ipaddress.IPv4Network] = []
 
     def __init__(self, *args, **kwargs):
         if (qemu_opts := kwargs.get("qemu")) and not isinstance(qemu_opts, QemuConfig):
@@ -148,6 +149,6 @@ class NetworkMode(enum.StrEnum):
 
 
 class VmPort(enum.IntEnum):
-    MON = 10000
+    TELNET = 10000
     QMP = 10001
     VNC_WS = 5800

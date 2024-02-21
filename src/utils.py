@@ -1,11 +1,9 @@
 import ipaddress
 import logging
+import os
 import random
+import re
 import subprocess
-import typing
-import uuid
-
-import meta
 
 log = logging.getLogger(__name__)
 
@@ -36,16 +34,6 @@ def gen_random_mac():
     )
 
 
-def gen_netdev_name(
-    mode: meta.NetworkMode, ifaces: typing.Iterable[str] = []
-) -> tuple[str, str]:
-    while True:
-        dev_id = str(uuid.uuid4().fields[-1])[:8]
-        dev_name = mode + dev_id
-        if dev_name not in ifaces:
-            return dev_name, dev_id
-
-
 def gen_non_conflicting_ip(ip: str, cidr: int):
     new_cidr = cidr - 1
     ip_int = int(ipaddress.ip_address(ip))
@@ -54,19 +42,17 @@ def gen_non_conflicting_ip(ip: str, cidr: int):
     return new_ip, new_cidr
 
 
-def list_interfaces(exclude_bridge: bool = True):
-    # get all interfaces
+def list_interfaces():
     ret = sh(
         "ip link show | grep -v noop | grep state "
         "| grep -v LOOPBACK | awk '{print $2}' | tr -d : | sed 's/@.*$//'"
     )
-    all_ifaces = set(ret.stdout.decode().split())
-    if not exclude_bridge:
-        return all_ifaces
-    # bridges
+    return set(x.strip() for x in ret.stdout.decode().split())
+
+
+def list_bridges():
     ret = sh("brctl show | tail -n +2 | awk '{print $1}'")
-    bridges = set(ret.stdout.decode().split())
-    return all_ifaces - bridges
+    return set(ret.stdout.decode().split())
 
 
 def list_nameservers():
@@ -79,5 +65,29 @@ def get_default_route():
     return ret.stdout.decode().strip()
 
 
+def get_default_interface():
+    ret = sh("ip route | grep default | awk '{print $5}'")
+    return ret.stdout.decode().strip()
+
+
 def get_hostname():
     return sh("hostname -s").stdout.decode().strip()
+
+
+ip_addr_iface_ip_cidr = re.compile(r"inet\s+(.+)\s+brd")
+ip_addr_iface_mac = re.compile(r"link/ether\s+(.+)\s+brd")
+
+
+def get_interface_info(iface):
+    ret = sh(f"ip address show dev {iface}")
+    info = ret.stdout.decode()
+    ip_cidr_list = ip_addr_iface_ip_cidr.findall(info)  # ip/cidr
+    macs = ip_addr_iface_mac.findall(info)
+    if not macs:
+        raise ValueError(f"cannot find mac for {iface}, output: {info}")
+    mac = macs[0]
+    return ip_cidr_list, mac
+
+
+def is_host_avaliable(ip, times: int = 1, timeout: float = 1):
+    return os.system(f"ping -c {times} -W {timeout} {ip} >/dev/null") == 0
