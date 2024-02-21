@@ -15,7 +15,6 @@ RUN apt update \
     dnsmasq \
     net-tools \
     netcat-openbsd \
-    bridge-utils \
     caddy \
     # vga
     xserver-xorg-video-intel \

@@ -1,12 +1,15 @@
 import abc
 import enum
 import ipaddress
+import os
 import pathlib
 
 import dynaconf
 import pydantic
 
+THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 STORAGE_DIR = "/storage"
+
 
 #
 # Qemu Config
@@ -77,7 +80,7 @@ class QemuConfig(TQemuConfig):
 
 settings = dynaconf.Dynaconf(
     envvar_prefix="",
-    settings_files=["settings.yaml", "defaults.yaml"],
+    settings_files=["settings.yaml", os.path.join(THIS_DIR, "defaults.yaml")],
     merge_enabled=True,
     environments=False,
     load_dotenv=True,
@@ -100,7 +103,6 @@ class Config(pydantic.BaseModel):
     enable_kvm: bool = True
     enable_macvlan: bool = True
     enable_dhcp: bool = True
-    enable_vnc: bool = True
     enable_vnc_web: bool = True
     enable_monitor: bool = True
     networks: list[ipaddress.IPv4Network | ipaddress.IPv6Network] = []

@@ -27,10 +27,9 @@ def main(
     iso: pathlib.Path = typer.Option(default=None, help="ISO file path"),
     kvm: bool = typer.Option(default=True, help="Enable KVM"),
     macvlan: bool = typer.Option(
-        default=False, help="Enable macvlan network, otherwise use bridge network"
+        default=True, help="Enable macvlan network, otherwise use bridge network"
     ),
     dhcp: bool = typer.Option(default=True, help="Enable DHCP"),
-    vnc: bool = typer.Option(default=True, help="Enable VNC"),
     vnc_web: bool = typer.Option(default=True, help="Enable VNC web client (noVNC)"),
     monitor: bool = typer.Option(default=True, help="Enable tcp monitor"),
     networks: list[str] = typer.Option(
@@ -47,7 +46,6 @@ def main(
         enable_kvm=kvm,
         enable_macvlan=macvlan,
         enable_dhcp=dhcp,
-        enable_vnc=vnc,
         enable_vnc_web=vnc_web,
         enable_monitor=monitor,
         networks=[ipaddress.ip_network(n) for n in networks],
