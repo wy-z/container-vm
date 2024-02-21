@@ -188,12 +188,18 @@ def configure_monitor():
     c = meta.config
     if not c.enable_monitor:
         return
-    c.qemu.append({"monitor": "tcp:127.0.0.1:10000,server,nowait"})
-    c.qemu.append({"qmp": "tcp:127.0.0.1:10001,server,nowait"})
+    c.qemu.append({"monitor": f"tcp:127.0.0.1:{meta.VmPort.MON},server,nowait"})
+    c.qemu.append({"qmp": f"tcp:127.0.0.1:{meta.VmPort.QMP},server,nowait"})
 
 
 def configure_vnc():
     c = meta.config
+    if not c.enable_vnc_web:
+        return
+    c.qemu.append({"vnc": f":0,websocket={meta.VmPort.VNC_WS}"})
+
+
+def config_port_forwarding():
     pass
 
 
@@ -201,24 +207,23 @@ def check_capabilities():
     # NET_ADMIN
     if not utils.check_linux_capability("NET_ADMIN"):
         raise click.UsageError(
-            "'CAP_NET_ADMIN' is required, please run container with '--cap-add=NET_ADMIN'"
+            "'CAP_NET_ADMIN' is required, please run container with '--cap-add=NET_ADMIN' or '--privileged'"
         )
     # macvtap dev
-    tap_dev = "/dev/tap0"
+    vhost_dev = "/dev/tmp-vhost-net"
     try:
-        if (
-            meta.config.enable_macvlan
-            and sh(
-                f"mknod {tap_dev} c 249 2 && echo 1 >{tap_dev}", check=False
-            ).returncode
-            != 0
-        ):
-            raise click.UsageError(
-                "device permissions are required for macvlan network, "
-                "consider run container with '--device-cgroup-rule='c *:* rwm' or '--privileged'"
-            )
+        if meta.config.enable_macvlan:
+            sh(f"mknod -m 660 {vhost_dev} c 10 238")
+            if (
+                b"Operation not permitted"
+                in sh(f"echo 1 >{vhost_dev}", check=False).stderr
+            ):
+                raise click.UsageError(
+                    "device permissions are required for macvlan network, "
+                    'consider run container with "--device-cgroup-rule=\'c *:* rwm\'" or "--privileged"'
+                )
     finally:
-        sh(f"rm -f {tap_dev}")
+        sh(f"rm -f {vhost_dev}")
 
 
 def run_qemu():
@@ -249,6 +254,6 @@ def run_qemu():
     configure_vnc()
 
     # run qemu
-    cmd = f"qemu-system-{c.arch} -no-reboot {c.qemu.to_args()}"
+    cmd = f"qemu-system-{c.arch} {c.qemu.to_args()}"
     log.info(f"Running {cmd} ...")
     sh(cmd, stdout=None, stderr=None)

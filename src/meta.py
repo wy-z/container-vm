@@ -145,3 +145,9 @@ load_config()
 class NetworkMode(enum.StrEnum):
     TAP_BRIDGE = "tapbr"
     MACVLAN = "macvlan"
+
+
+class VmPort(enum.IntEnum):
+    MON = 10000
+    QMP = 10001
+    VNC_WS = 5800

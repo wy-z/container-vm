@@ -1,0 +1,14 @@
+:8080 {
+	file_server {
+        root {$VNC:/opt/noVNC}
+		index vnc.html
+	}
+
+	@root {
+		path /
+		query ""
+	}
+	redir @root /?resize=scale&autoconnect=true
+
+	reverse_proxy /websockify http://127.0.0.1:5800
+}
