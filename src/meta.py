@@ -106,7 +106,7 @@ class BootMode(enum.StrEnum):
 class Config(pydantic.BaseModel):
     model_config = pydantic.ConfigDict(arbitrary_types_allowed=True)
 
-    qemu: QemuConfig
+    qemu: QemuConfig = pydantic.Field(default_factory=QemuConfig)
 
     arch: str = "x86_64"
     cpu_num: int | None = None
@@ -124,6 +124,7 @@ class Config(pydantic.BaseModel):
     networks: list[ipaddress.IPv4Network] = []
     extra_args: str = ""
     win_opts: WinOpts | None = None
+    port_forwards: list[str] = []
 
     def __init__(self, *args, **kwargs):
         if (qemu_opts := kwargs.get("qemu")) and not isinstance(qemu_opts, QemuConfig):

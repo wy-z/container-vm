@@ -22,7 +22,7 @@ def get_vm_id():
     pf = pathlib.Path(VM_ID_FILE)
     vm_id = None
     if not os.path.exists(VM_ID_FILE):
-        os.makedirs(os.path.dirname(VM_ID_FILE))
+        os.makedirs(os.path.dirname(VM_ID_FILE), exist_ok=True)
         pf.touch()
     else:
         vm_id = pf.read_text().strip()
@@ -209,24 +209,31 @@ def configure_network() -> tuple[ipaddress.IPv4Address, dict[str, tuple[str, str
     return gw, iface_map
 
 
-def configure_dhcp(
+def _select_default_network(
     gw: ipaddress.IPv4Address,
     ifaces: dict[str, tuple[str, str]],
 ):
     network, mac, ip = None, None, None
-    for v in ifaces.values():
-        if not v[1]:  # skip no ip iface
+    for _mac, ipnet in ifaces.values():
+        if not ipnet:  # skip no ip iface
             continue
-        n = ipaddress.ip_network(v[1], strict=False)
+        n = ipaddress.ip_network(ipnet, strict=False)
         if gw not in n:  # default network only
             continue
         network = n
-        mac = v[0]
-        ip, _ = v[1].split("/")
+        mac = _mac
+        ip, _ = ipnet.split("/")
         ip = ipaddress.ip_address(ip)
     if not network:
         raise EnvironmentError(f"cannot find network for {gw}")
+    return network, mac, ip
 
+
+def configure_dhcp(
+    gw: ipaddress.IPv4Address,
+    ifaces: dict[str, tuple[str, str]],
+):
+    network, mac, ip = _select_default_network(gw, ifaces)
     log_file = "/var/log/dnsmasq.log"
     dnsmasq_opts = [
         "--log-queries",
@@ -239,6 +246,21 @@ def configure_dhcp(
     ]
     log.info(f"Running dnsmasq {' '.join(dnsmasq_opts)} ...")
     sh(["dnsmasq", *dnsmasq_opts], stdout=None, stderr=None)
+
+
+def config_port_forward(gw: ipaddress.IPv4Address, ifaces: dict[str, tuple[str, str]]):
+    _, _, ip = _select_default_network(gw, ifaces)
+    c = meta.config
+    for spec in c.port_forwards:
+        if ":" not in spec:
+            raise ValueError(f"invalid port forward spec: {spec}")
+        int_port, pub_port = spec.split(":")
+        sh(
+            f"iptables -t nat -A PREROUTING -p tcp --dport {pub_port} -j DNAT --to-destination {ip}:{int_port}"
+        )
+        sh(
+            f"iptables -t nat -A POSTROUTING -p tcp -d {ip} --dport {int_port} -j MASQUERADE"
+        )
 
 
 def configure_console():
@@ -259,10 +281,6 @@ def configure_vnc():
     # run caddy
     log.info("Running caddy ...")
     sh("caddy start", stdout=None, stderr=None)
-
-
-def config_port_forwarding():
-    pass
 
 
 def check_capabilities():
@@ -370,6 +388,8 @@ def run_qemu():
     configure_boot()
     # network
     gw, iface_map = configure_network()
+    # port forward
+    config_port_forward(gw, iface_map)
     # dhcp
     configure_dhcp(gw, iface_map)
     # console

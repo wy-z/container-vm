@@ -35,8 +35,8 @@ def str_or_none(value: str):
 
 @app.callback()
 def main(
-    cpu_num: int = typer.Option(None, "--cpu", help="CPU cores"),
-    mem_size: int = typer.Option(None, "--mem", min=1, help="Memory size in MB"),
+    cpu_num: int = typer.Option(None, "-c", "--cpu", help="CPU cores"),
+    mem_size: int = typer.Option(None, "-m", "--mem", min=1, help="Memory size in MB"),
     arch: str = typer.Option(
         default="x86_64", help="VM arch", click_type=click.Choice(QEMU_ARCHS)
     ),
@@ -52,7 +52,7 @@ def main(
     ),
     machine: str = typer.Option(None, help="Machine type"),
     boot: typing.Optional[str] = typer.Option(
-        "order=dc,menu=on", help="Boot options", parser=str_or_none
+        "once=dc", help="Boot options", parser=str_or_none
     ),
     boot_mode: meta.BootMode = typer.Option(meta.BootMode.LEGACY, help="Boot mode"),
     ifaces: list[str] = typer.Option(
@@ -118,14 +118,14 @@ def gen_disk_name(sn: str, type="qcow2"):
 @app.command()
 def apply_disk(
     name: str = typer.Argument(..., help="Disk name (e.g. disk1)"),
-    size: str = typer.Option("16G", help="Disk size (e.g. 32G)"),
+    size: str = typer.Option("16G", "-s", "--size", help="Disk size (e.g. 32G)"),
     file_type: str = typer.Option("qcow2", help="Drive file type (e.g. qcow2,raw)"),
     if_type: str = typer.Option(None, help="Drive interface type (e.g. virtio,ide)"),
     opts: str = typer.Option(
         None, help="External drive options (e.g. index=i,format=f)"
     ),
 ):
-    """Apply VM drive"""
+    """Apply VM disk"""
     c = meta.config
     name = gen_disk_name(name, file_type)
     drive_file = os.path.join(meta.STORAGE_DIR, name)
@@ -150,6 +150,10 @@ def ext_args(args: list[str] = typer.Argument(..., help="External Qemu args")):
 
 
 @app.command()
-def port_forward(ports: list[str] = typer.Option(..., "-p", help="External Qemu args")):
-    """External Qemu args"""
-    pass
+def port_forward(
+    ports: list[str] = typer.Option(
+        ..., "-p", "--port", help="(multiple) Port forward spec (e.g. 80:8088)"
+    ),
+):
+    """Forward VM ports"""
+    meta.config.port_forwards = ports
