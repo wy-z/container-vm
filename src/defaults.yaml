@@ -1,5 +1,0 @@
----
-qemu:
-  - nodefaults: true
-    msg:
-      timestamp: on

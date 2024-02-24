@@ -1,19 +1,19 @@
 from setuptools import find_packages, setup
 
-install_requires = ["typer[all]", "pydantic", "dynaconf", "ring", "tenacity"]
+install_requires = ["typer[all]", "pydantic", "dynaconf", "diskcache"]
 
 extras_require = {
     "dev": [
+        "pip-tools",
         "ruff",
         "isort",
-        "pip-tools",
         "mypy",
         "pytest",
         "pytest-variables[yaml]",
         "pytest-xdist",
         "pytest-cov",
     ],
-    "build": ["pyinstaller"],
+    "build": ["pyinstaller", "pyinstaller-hooks-contrib"],
 }
 
 setup(
@@ -22,7 +22,7 @@ setup(
     license="MIT",
     author="weiyang",
     author_email="weiyang.ones@gmail.com",
-    description="VM in container",
+    description="Run VM in container",
     packages=find_packages(),
     use_scm_version={
         "write_to": "version.txt",

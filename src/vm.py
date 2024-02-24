@@ -1,16 +1,35 @@
+import functools
 import ipaddress
 import logging
 import os
+import pathlib
+import time
 import uuid
 
 import click
 
-import meta
-import utils
+from . import meta, utils
 
 log = logging.getLogger(__name__)
-
 sh = utils.sh
+
+
+VM_ID_FILE = os.path.join(meta.STORAGE_DIR, "vm-id")
+
+
+@functools.cache
+def get_vm_id():
+    pf = pathlib.Path(VM_ID_FILE)
+    vm_id = None
+    if not os.path.exists(VM_ID_FILE):
+        os.makedirs(os.path.dirname(VM_ID_FILE))
+        pf.touch()
+    else:
+        vm_id = pf.read_text().strip()
+    if not vm_id:
+        vm_id = uuid.uuid4().hex[:8]
+        pf.write_text(vm_id)
+    return vm_id
 
 
 def get_qemu_archs():
@@ -219,7 +238,7 @@ def configure_dhcp(
         f"--dhcp-option=option:router,{gw}",
     ]
     log.info(f"Running dnsmasq {' '.join(dnsmasq_opts)} ...")
-    sh(["dnsmasq", *dnsmasq_opts])
+    sh(["dnsmasq", *dnsmasq_opts], stdout=None, stderr=None)
 
 
 def configure_console():
@@ -269,9 +288,63 @@ def check_capabilities():
         sh(f"rm -f {vhost_dev}")
 
 
-def run_qemu():
-    check_capabilities()
+OVMF_DIR = "/usr/share/OVMF"
+PREFER_MACHINES = ["q35", "virt"]
 
+
+def _get_prefer_machine():
+    c = meta.config
+    machs = utils.get_qemu_machines(c.arch)
+    for i in PREFER_MACHINES:
+        if i in machs:
+            return i
+    active_machs = utils.get_qemu_machines(c.arch, active_only=True)
+    if active_machs:
+        return active_machs[0]
+    log.warn("cannot find available machine type, consider assign '--machine'")
+    return
+
+
+def configure_boot():
+    c = meta.config
+    # machine
+    mach = c.machine or _get_prefer_machine()
+    if mach:
+        log.info(f"Using machine type: {mach}")
+        c.qemu.append({"machine": mach})
+    # boot options
+    if c.boot is not None:
+        c.qemu.append({"boot": c.boot})
+    # boot mode
+    if c.boot_mode == meta.BootMode.LEGACY:
+        return
+
+    rom, vars = None, None
+    match c.boot_mode:
+        case meta.BootMode.UEFI:
+            rom = "OVMF_CODE_4M.fd"
+            vars = "OVMF_VARS_4M.fd"
+        case meta.BootMode.SECURE:
+            rom = "OVMF_CODE_4M.secboot.fd"
+            vars = "OVMF_VARS_4M.secboot.fd"
+        case meta.BootMode.WINDOWS:
+            rom = "OVMF_CODE_4M.ms.fd"
+            vars = "OVMF_VARS_4M.ms.fd"
+        case _:
+            raise click.UsageError(f"invalid boot mode '{c.boot_mode}'")
+    boot_dir = os.path.join(meta.STORAGE_DIR, "boot")
+    os.makedirs(boot_dir, exist_ok=True)
+    rom_file = os.path.join(boot_dir, c.boot_mode + ".rom")
+    vars_file = os.path.join(boot_dir, c.boot_mode + ".vars")
+    if not os.path.exists(rom_file):
+        sh(f"cp {os.path.join(OVMF_DIR, rom)} {rom_file}")
+    if not os.path.exists(vars_file):
+        sh(f"cp {os.path.join(OVMF_DIR, vars)} {vars_file}")
+    c.qemu.append({"drive": f"file={rom_file},if=pflash,format=raw,readonly=on"})
+    c.qemu.append({"drive": f"file={vars_file},if=pflash,format=raw"})
+
+
+def configure_opts():
     c = meta.config
     # cpu
     if c.cpu_num:
@@ -280,12 +353,21 @@ def run_qemu():
     if c.mem_size:
         c.qemu.append({"m": c.mem_size})
     # kvm
-    if c.enable_kvm and utils.is_kvm_avaliable():
-        c.qemu.append({"enable-kvm": True})
+    if c.enable_accel:
+        if utils.is_kvm_avaliable():
+            c.qemu.append({"enable-kvm": True})
+        elif accels := utils.get_qemu_accels(c.arch):
+            c.qemu.append({"accel": accels[0]})
     # cdrom
     if c.iso:
         c.qemu.append({"cdrom": str(c.iso)})
 
+
+def run_qemu():
+    check_capabilities()
+    configure_opts()
+    # boot
+    configure_boot()
     # network
     gw, iface_map = configure_network()
     # dhcp
@@ -296,6 +378,35 @@ def run_qemu():
     configure_vnc()
 
     # run qemu
-    cmd = f"qemu-system-{c.arch} {c.qemu.to_args()}"
+    c = meta.config
+    cmd = f"qemu-system-{c.arch} {c.qemu.to_args()} {c.extra_args}"
     log.info(f"Running {cmd} ...")
     sh(cmd, stdout=None, stderr=None)
+
+
+def create_drive(file, size, file_type="qcow2"):
+    os.makedirs(os.path.dirname(file), exist_ok=True)
+    log.info(f"Createing {file} ...")
+    sh(f"qemu-img create -f {file_type} {file} {size}")
+
+
+def setup_swtpm():
+    tpm_dir = "/run/shm/tpm"
+    pid_file = "/var/run/tpm.pid"
+    sock_file = "/run/swtpm-sock"
+    sh(f"rm -rf {tpm_dir}")
+    sh(f"rm -f {pid_file}")
+    sh(f"mkdir -m 755 -p {tpm_dir}")
+    sh(
+        f"swtpm socket -t -d --tpmstate dir={tpm_dir} --ctrl type=unixio,path={sock_file} --pid file={pid_file} --tpm2"
+    )
+    for i in reversed(range(6)):
+        if os.path.exists(sock_file):
+            break
+        if i == 0:
+            raise EnvironmentError("failed to start swtpm")
+        time.sleep(1)
+    meta.config.qemu.append({"chardev": f"socket,id=chrtpm,path={sock_file}"})
+    meta.config.qemu.append(
+        {"tpmdev": "emulator,id=tpm0,chardev=chrtpm -device tpm-tis,tpmdev=tpm0"}
+    )

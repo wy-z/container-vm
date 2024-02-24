@@ -1,3 +1,4 @@
+# container-vm-base
 FROM debian:stable-slim
 
 ENV NOVNC_DIR /opt/noVNC
@@ -7,6 +8,7 @@ RUN apt update \
     && apt --no-install-recommends -y install \
     tini \
     qemu-system \
+    qemu-utils \
     wget \
     swtpm \
     iptables \
@@ -18,9 +20,10 @@ RUN apt update \
     inetutils-ping \
     caddy \
     telnet \
+    procps \
     && apt clean \
     && mkdir -p $NOVNC_DIR \
-    && wget https://github.com/novnc/noVNC/archive/refs/tags/v"$NOVNC_VERSION".tar.gz -O /tmp/novnc.tar.gz -q \
+    && wget https://github.com/novnc/noVNC/archive/refs/tags/v"$NOVNC_VERSION".tar.gz -O /tmp/novnc.tar.gz \
     && tar -xf /tmp/novnc.tar.gz -C /tmp/ \
     && cd /tmp/noVNC-"$NOVNC_VERSION" \
     && mv app core vendor package.json *.html $NOVNC_DIR \
@@ -28,7 +31,3 @@ RUN apt update \
 
 COPY ./Caddyfile /etc/caddy/Caddyfile
 
-VOLUME /storage
-EXPOSE 22 23 8080
-
-ENTRYPOINT ["/run/entry.sh"]

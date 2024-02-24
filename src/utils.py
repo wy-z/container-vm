@@ -91,3 +91,18 @@ def get_interface_info(iface):
 
 def is_host_avaliable(ip, times: int = 1, timeout: float = 1):
     return os.system(f"ping -c {times} -W {timeout} {ip} >/dev/null") == 0
+
+
+def get_qemu_accels(arch: str):
+    ret = sh(f"qemu-system-{arch} -accel help | tail -n +2")
+    return [i.strip() for i in ret.stdout.decode().splitlines()]
+
+
+def get_qemu_machines(arch: str, active_only=False):
+    if active_only:
+        ret = sh(
+            f"qemu-system-{arch} -machine help | tail -n +2 | grep alias | awk '{{print $1}}'"
+        )
+    else:
+        ret = sh(f"qemu-system-{arch} -machine help | tail -n +2 | awk '{{print $1}}'")
+    return [i.strip() for i in ret.stdout.decode().splitlines()]

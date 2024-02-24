@@ -8,7 +8,7 @@ import dynaconf
 import pydantic
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
-STORAGE_DIR = "/storage"
+STORAGE_DIR = "/storage" if os.path.exists("/storage") else ".storage"
 
 
 #
@@ -80,7 +80,7 @@ class QemuConfig(TQemuConfig):
 
 settings = dynaconf.Dynaconf(
     envvar_prefix="",
-    settings_files=["settings.yaml", os.path.join(THIS_DIR, "defaults.yaml")],
+    settings_files=["settings.yaml"],
     merge_enabled=True,
     environments=False,
     load_dotenv=True,
@@ -89,6 +89,18 @@ settings = dynaconf.Dynaconf(
 #
 # ContainerVm Config
 #
+
+
+class WinOpts(pydantic.BaseModel):
+    virtio_iso: pathlib.Path
+    enable_tmp: bool = True
+
+
+class BootMode(enum.StrEnum):
+    UEFI = "uefi"
+    SECURE = "secure"
+    WINDOWS = "windows"
+    LEGACY = "legacy"
 
 
 class Config(pydantic.BaseModel):
@@ -100,13 +112,18 @@ class Config(pydantic.BaseModel):
     cpu_num: int | None = None
     mem_size: int | None = None
     iso: pathlib.Path | None = None
-    enable_kvm: bool = True
+    enable_accel: bool = True
     enable_macvlan: bool = True
     enable_dhcp: bool = True
     enable_vnc_web: bool = True
     enable_console: bool = True
+    machine: str | None = None
+    boot_mode: BootMode = BootMode.LEGACY
+    boot: str | None = None
     ifaces: list[str] = []
     networks: list[ipaddress.IPv4Network] = []
+    extra_args: str = ""
+    win_opts: WinOpts | None = None
 
     def __init__(self, *args, **kwargs):
         if (qemu_opts := kwargs.get("qemu")) and not isinstance(qemu_opts, QemuConfig):
@@ -118,6 +135,10 @@ class Config(pydantic.BaseModel):
             if not hasattr(self, k):
                 continue
             setattr(self, k, v)
+
+    @property
+    def is_win(self):
+        return self.win_opts is not None
 
 
 config: Config
