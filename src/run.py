@@ -20,7 +20,6 @@ app = typer.Typer(
     chain=True,
     invoke_without_command=True,
     result_callback=run_qemu,
-    context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
 )
 
 
