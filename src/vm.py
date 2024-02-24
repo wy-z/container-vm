@@ -248,9 +248,16 @@ def configure_dhcp(
     sh(["dnsmasq", *dnsmasq_opts], stdout=None, stderr=None)
 
 
-def config_port_forward(gw: ipaddress.IPv4Address, ifaces: dict[str, tuple[str, str]]):
+DEFAULT_PORT_FORWARDS = ["22:22", "3389:3389"]
+
+
+def configure_port_forward(
+    gw: ipaddress.IPv4Address, ifaces: dict[str, tuple[str, str]]
+):
     _, _, ip = _select_default_network(gw, ifaces)
     c = meta.config
+    if c.port_forwards is None:
+        c.port_forwards = DEFAULT_PORT_FORWARDS
     for spec in c.port_forwards:
         if ":" not in spec:
             raise ValueError(f"invalid port forward spec: {spec}")
@@ -280,7 +287,7 @@ def configure_vnc():
     c.qemu.append({"vnc": f":0,websocket={meta.VmPort.VNC_WS}", "vga": "virtio"})
     # run caddy
     log.info("Running caddy ...")
-    sh("caddy start", stdout=None, stderr=None)
+    sh("caddy start --config /etc/caddy/Caddyfile", stdout=None, stderr=None)
 
 
 def check_capabilities():
@@ -389,7 +396,7 @@ def run_qemu():
     # network
     gw, iface_map = configure_network()
     # port forward
-    config_port_forward(gw, iface_map)
+    configure_port_forward(gw, iface_map)
     # dhcp
     configure_dhcp(gw, iface_map)
     # console
