@@ -152,7 +152,7 @@ def ext_args(args: list[str] = typer.Argument(..., help="External Qemu args")):
 @app.command()
 def port_forward(
     ports: list[str] = typer.Option(
-        ..., "-p", "--port", help="(multiple) Port forward spec (e.g. 80:8088)"
+        None, "-p", "--port", help="(multiple) Port forward spec (e.g. 80:8088)"
     ),
 ):
     """Forward VM ports"""

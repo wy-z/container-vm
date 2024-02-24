@@ -1,16 +1,21 @@
+ARG CVM_DIR=/container-vm
+
+FROM container-vm-dev as build
+
+ARG CVM_DIR
+
+ADD . ${CVM_DIR}
+RUN cd ${CVM_DIR} \
+    && just build
+
+
 FROM container-vm-base
 
-ENV NOVNC_DIR /opt/noVNC
-ENV NOVNC_VERSION 1.4.0
+ARG CVM_DIR
 
-RUN apt update \
-    && apt --no-install-recommends -y install python3 \
-    && apt clean \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-COPY ./Caddyfile /etc/caddy/Caddyfile
+COPY --from=build ${CVM_DIR}/dist/container-vm /app
 
 VOLUME /storage
-EXPOSE 22 23 8080
+EXPOSE 8080 22 3389
 
-ENTRYPOINT ["/run/entry.sh"]
+ENTRYPOINT ["/app/container-vm"]

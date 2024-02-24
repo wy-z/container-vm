@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-install_requires = ["typer[all]", "pydantic", "dynaconf", "diskcache"]
+install_requires = ["typer[all]", "pydantic", "dynaconf"]
 
 extras_require = {
     "dev": [
