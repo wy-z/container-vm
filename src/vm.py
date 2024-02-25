@@ -394,7 +394,7 @@ def configure_opts():
             c.qemu.append({"accel": accels[0]})
     # cdrom
     if c.iso:
-        c.qemu.append({"cdrom": str(c.iso)})
+        c.qemu.insert(0, {"cdrom": str(c.iso)})
 
 
 def run_qemu():
