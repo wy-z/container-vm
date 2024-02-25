@@ -38,18 +38,29 @@ Then you can:
 
 ## Windows Usage
 
-1.  Download windows iso (`Win11_23H2_x64v2.iso`)
+1.  Download windows iso (`Win11_23H2_x64v2.iso` or [tiny11](https://archive.org/details/tiny11-2311))
 2.  Download VirtIO from `https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio` (`virtio-win.iso`)
 3.  Start container
 
+    Linux
+
     ```sh
-    docker run --rm -it --restart on-failure -v $PWD:/storage --cap-add=NET_ADMIN --device /dev/kvm \
+    docker run --rm -v $PWD:/storage --cap-add=NET_ADMIN --device /dev/kvm \
         --device-cgroup-rule='c *:* rwm' -p 8080:8080 weiyang/container-vm run -c 4 -m 8192 \
         --iso /storage/Win11_23H2_x64v2.iso windows --virtio-iso /storage/virtio-win.iso \
         apply-disk -s 64G hda ext-args -- -cpu host
     ```
 
-         On MacOS, rm `--device=/dev/kvm`
+    MacOS
+
+    ```sh
+    docker run --rm -v $PWD:/storage --cap-add=NET_ADMIN --device-cgroup-rule='c *:* rwm' \
+        -p 8080:8080 weiyang/container-vm run -c 4 -m 8192 \
+        --iso /storage/Win11_23H2_x64v2.iso windows --virtio-iso /storage/virtio-win.iso \
+        apply-disk -s 64G hda
+    ```
+
+         On MacOS, rm `--device=/dev/kvm` and `ext-args -- -cpu host`
 
     1. `--cap-add=NET_ADMIN` is necessary for network configuration
     2. `--device-cgroup-rule='c *:* rwm'` is necessary for macvlan, or disable by `--no-macvlan`
@@ -60,9 +71,9 @@ Then you can:
     7. `ext-args -- -cpu host` host-passthrough cpu mode, all flags after `ext-args --` will be passed to qemu
     8. VirtIO iso is recommended for best performance
 
-### Container capabilitie limits
+### Container capability limits
 
-1. Minimum capabilitie requirement is `--cap-add=NET_ADMIN`, run with `--no-macvlan --no-accel`
+1. Minimum capability requirement is `--cap-add=NET_ADMIN`, run with `--no-macvlan --no-accel`
 2. `--device-cgroup-rule='c *:* rwm'`/`--no-macvlan` will disable macvlan, use tap bridge
 3. `--device=/dev/kvm`/`--no-accel` will disable IO acceleration, not recommended
 

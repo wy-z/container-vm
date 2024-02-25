@@ -104,7 +104,10 @@ def windows(
     if virtio_iso:
         c.qemu.append({"drive": f"file={virtio_iso},if=ide,media=cdrom,readonly=on"})
     if tpm:
-        vm.setup_swtpm()
+        try:
+            vm.setup_swtpm()
+        except Exception:
+            log.warn("failed to setup swtpm, ignore TPM support")
     if c.boot_mode == meta.BootMode.LEGACY:
         c.boot_mode = meta.BootMode.WINDOWS
 
