@@ -307,7 +307,7 @@ def check_capabilities():
                 in sh(f"echo 1 >{vhost_dev}", check=False).stderr
             ):
                 raise click.UsageError(
-                    "macvlan network was enabled, "
+                    "macvlan network is enabled, "
                     'please run container with "--device-cgroup-rule=\'c *:* rwm\'" or "--privileged"'
                 )
     finally:
@@ -316,7 +316,7 @@ def check_capabilities():
     kvm_dev = "/dev/kvm"
     if c.enable_accel and utils.is_kvm_avaliable() and not os.path.exists(kvm_dev):
         raise click.UsageError(
-            "'kvm' was enabled, please run container with '--device /dev/kvm' or '--privileged'"
+            "'kvm' is enabled, please run container with '--device /dev/kvm' or '--privileged'"
         )
 
 
