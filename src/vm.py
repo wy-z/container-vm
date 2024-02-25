@@ -77,7 +77,7 @@ def get_interface_ipnets(iface) -> list:
     )
 
 
-def _setup_tap_bridge(iface, dev_name, dev_id, new_mac, ipnet: str | None = None):
+def _setup_tap_bridge(iface, dev_name, dev_id, ipnet: str | None = None):
     sh(f"ip link add dev {dev_name} type bridge")
     sh(f"ip link set {iface} master {dev_name}")
     # write bridge.conf
@@ -90,7 +90,6 @@ def _setup_tap_bridge(iface, dev_name, dev_id, new_mac, ipnet: str | None = None
         sh("mknod -m 666 /dev/net/tun c 10 200")
     tap_name = "tap" + dev_id
     sh(f"ip tuntap add dev {tap_name} mode tap")
-    sh(f"ip link set {tap_name} address {new_mac}")
     sh(f"ip link set {tap_name} up")
     sh(f"ip link set {tap_name} master {dev_name}")
     # up bridge
@@ -145,7 +144,7 @@ def setup_bridge(
     if not os.path.exists("/dev/vhost-net"):
         sh("mknod -m 660 /dev/vhost-net c 10 238")
     if mode == meta.NetworkMode.TAP_BRIDGE:
-        tap_name = _setup_tap_bridge(iface, dev_name, dev_id, new_mac, ipnet)
+        tap_name = _setup_tap_bridge(iface, dev_name, dev_id, ipnet)
         meta.config.qemu.append(
             {
                 "netdev": {
