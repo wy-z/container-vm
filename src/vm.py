@@ -243,6 +243,8 @@ def configure_dhcp(
         f"--dhcp-option=option:dns-server,{','.join(utils.list_nameservers())}",
         f"--dhcp-option=option:router,{gw}",
     ]
+    # rm dnsmasq leases
+    sh("rm -f /var/lib/misc/dnsmasq.leases")
     log.info(f"Running dnsmasq {' '.join(dnsmasq_opts)} ...")
     sh(["dnsmasq", *dnsmasq_opts], stdout=None, stderr=None)
 
