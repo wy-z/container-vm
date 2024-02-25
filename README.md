@@ -1,6 +1,6 @@
 # docker-vm
 
-Run qemu/kvm vm's inside a docker container
+Run qemu/kvm VM inside a docker container
 
 ## Quick Start
 
