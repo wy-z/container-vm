@@ -2,20 +2,24 @@
 
 Run qemu/kvm vm's inside a docker container
 
-## Features
-
-- Simplicity: Utilizes a clean, straightforward QEMU setup for hassle-free virtualization, focusing on ease of use.
-- Flexibility: Offers full compatibility and extensibility with customizable configurations, catering to diverse needs and ensuring easy adaptability for future expansions.
-
-      More features are on the way.
-
 ## Quick Start
+
+### Linux
 
 ```sh
 mkdir tmp && cp tmp
 wget https://dl-cdn.alpinelinux.org/alpine/v3.19/releases/x86_64/alpine-virt-3.19.1-x86_64.iso
 docker run --name container-vm --rm -v $PWD:/storage --cap-add=NET_ADMIN --device-cgroup-rule='c *:* rwm' \
     --device=/dev/kvm -p 8080:8080 weiyang/container-vm run --iso /storage/alpine-virt-3.19.0-x86_64.iso
+```
+
+### MacOS
+
+```sh
+mkdir tmp && cp tmp
+wget https://dl-cdn.alpinelinux.org/alpine/v3.19/releases/x86_64/alpine-virt-3.19.1-x86_64.iso
+docker run --name container-vm --rm -v $PWD:/storage --cap-add=NET_ADMIN --device-cgroup-rule='c *:* rwm' \
+    -p 8080:8080 weiyang/container-vm run --iso /storage/alpine-virt-3.19.0-x86_64.iso
 ```
 
 Then you can:
@@ -25,25 +29,36 @@ Then you can:
   - `Ctrl-A-C` -> Qemu monitor console
   - `Ctrl-]` to exit telnet
 
+## Features
+
+- Simplicity: Utilizes a clean, straightforward QEMU setup for hassle-free virtualization, focusing on ease of use.
+- Flexibility: Offers full compatibility and extensibility with customizable configurations, catering to diverse needs and ensuring easy adaptability for future expansions.
+
+      More features are on the way.
+
 ## Windows Usage
 
-1. Download windows iso (`Win11_23H2_x64v2.iso`)
-2. Download VirtIO from `https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio` (`virtio-win.iso`)
-3. Start container
-   ```sh
-   docker run --rm -it --restart on-failure -v $PWD:/storage --cap-add=NET_ADMIN --device /dev/kvm \
-       --device-cgroup-rule='c *:* rwm' -p 8080:8080 weiyang/container-vm run -c 4 -m 8192 \
-       --iso /storage/Win11_23H2_x64v2.iso windows --virtio-iso /storage/virtio-win.iso \
-       apply-disk -s 64G hda ext-args -- -cpu host
-   ```
-   1. `--cap-add=NET_ADMIN` is necessary for network configuration
-   2. `--device-cgroup-rule='c *:* rwm'` is necessary for macvlan, or disable by `--no-macvlan`
-   3. `-c 4 -m 8192` 4 cpu cores, 8G memory
-   4. `--iso /storage/Win11_23H2_x64v2.iso` add boot cdrom
-   5. `windows --virtio-iso /storage/virtio-win.iso` add virtio iso
-   6. `apply-disk -s 64G hda` create a 64G disk if not exists
-   7. `ext-args -- -cpu host` host-passthrough cpu mode, all flags after `ext-args --` will be passed to qemu
-   8. VirtIO iso is recommended for best performance
+1.  Download windows iso (`Win11_23H2_x64v2.iso`)
+2.  Download VirtIO from `https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio` (`virtio-win.iso`)
+3.  Start container
+
+    ```sh
+    docker run --rm -it --restart on-failure -v $PWD:/storage --cap-add=NET_ADMIN --device /dev/kvm \
+        --device-cgroup-rule='c *:* rwm' -p 8080:8080 weiyang/container-vm run -c 4 -m 8192 \
+        --iso /storage/Win11_23H2_x64v2.iso windows --virtio-iso /storage/virtio-win.iso \
+        apply-disk -s 64G hda ext-args -- -cpu host
+    ```
+
+         On MacOS, rm `--device=/dev/kvm`
+
+    1. `--cap-add=NET_ADMIN` is necessary for network configuration
+    2. `--device-cgroup-rule='c *:* rwm'` is necessary for macvlan, or disable by `--no-macvlan`
+    3. `-c 4 -m 8192` 4 cpu cores, 8G memory
+    4. `--iso /storage/Win11_23H2_x64v2.iso` add boot cdrom
+    5. `windows --virtio-iso /storage/virtio-win.iso` add virtio iso
+    6. `apply-disk -s 64G hda` create a 64G disk if not exists
+    7. `ext-args -- -cpu host` host-passthrough cpu mode, all flags after `ext-args --` will be passed to qemu
+    8. VirtIO iso is recommended for best performance
 
 ### Container capabilitie limits
 
