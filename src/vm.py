@@ -3,6 +3,7 @@ import ipaddress
 import logging
 import os
 import pathlib
+import re
 import time
 import uuid
 
@@ -133,7 +134,7 @@ def get_unused_ip(network: ipaddress.IPv4Network) -> str | None:
 
 
 def setup_bridge(
-    iface: str, mode: meta.NetworkMode, ipnet: str, index: int = 0
+    iface: str, mode: meta.NetworkMode, ipnet: str, index: int = 0, is_default=False
 ) -> tuple[str, str | None]:
     dev_name, dev_id = gen_netdev_name(mode)
     fd = 10 + index * 10
@@ -158,6 +159,14 @@ def setup_bridge(
             }
         )
     else:
+        # reset default iface to macvlan, for host -> vm
+        if is_default:
+            host_macvlan = "macvlan0"
+            sh(f"ip link add {host_macvlan} link {iface} type macvlan mode bridge")
+            sh(f"ip addr add {ipnet} dev {host_macvlan}")
+            sh(f"ip address flush {iface}")
+            sh(f"ip link set {host_macvlan} up")
+
         vtapdev = _setup_macvlan_bridge(iface, dev_name, dev_id, new_mac, ipnet)
         meta.config.qemu.append(
             {
@@ -194,6 +203,7 @@ def configure_network() -> tuple[ipaddress.IPv4Address, dict[str, tuple[str, str
     gw = ipaddress.IPv4Address(utils.get_default_route())
     mode = meta.NetworkMode.MACVLAN if c.enable_macvlan else meta.NetworkMode.TAP_BRIDGE
     ifaces = get_vm_interfaces()
+    default_iface = utils.get_default_interface()
     ipnets = {}
     for iface in ifaces:
         nets = get_interface_ipnets(iface)
@@ -201,7 +211,9 @@ def configure_network() -> tuple[ipaddress.IPv4Address, dict[str, tuple[str, str
             log.info(f"no ip/net found in {iface}")
         ipnets[iface] = nets[0] if nets else None
     for index, iface in enumerate(ipnets.keys()):
-        iface_map[iface] = setup_bridge(iface, mode, ipnets[iface], index)
+        iface_map[iface] = setup_bridge(
+            iface, mode, ipnets[iface], index, is_default=iface == default_iface
+        )
 
     # reset default route
     sh(f"route add default gw {gw}", check=False)
@@ -250,6 +262,7 @@ def configure_dhcp(
 
 
 DEFAULT_PORT_FORWARDS = ["22:22", "3389:3389"]
+port_forward_regex = re.compile(r"(\d+):(\d+)/?(tcp|udp)?")  # host_port:vm_port/tcp
 
 
 def configure_port_forward(
@@ -260,9 +273,11 @@ def configure_port_forward(
     if c.port_forwards is None:
         c.port_forwards = DEFAULT_PORT_FORWARDS
     for spec in c.port_forwards:
-        if ":" not in spec:
+        ret = port_forward_regex.findall(spec)
+        if not ret:
             raise ValueError(f"invalid port forward spec: {spec}")
-        host_port, vm_port = spec.split(":")
+        host_port, vm_port, protocol = ret[0]
+        protocol = protocol or "tcp"
         log.info(f"Forwarding {host_port} -> {ip}:{vm_port}")
         sh(
             f"iptables -t nat -A PREROUTING -p tcp --dport {host_port} -j DNAT --to-destination {ip}:{vm_port}"

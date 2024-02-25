@@ -45,12 +45,16 @@ class QemuOptKVal(QemuOpt, TQemuKValOpt):
 
 
 class QemuOptKDict(QemuOpt, TQemuKDictOpt):
+    RAW_KEY = "__raw__"
     type_adapter = pydantic.TypeAdapter(TQemuKDictOpt)
 
     def to_opts(self) -> list[str]:
         args = []
         for key, d in self.items():
+            ext_args = d.pop(self.RAW_KEY, "")
             opts = ",".join(f"{k}={v}" for k, v in d.items())
+            if ext_args:
+                opts += f",{ext_args}"
             args.append(f"{key},{opts}")
         return args
 
