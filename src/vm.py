@@ -291,6 +291,7 @@ def configure_vnc():
 
 
 def check_capabilities():
+    c = meta.config
     # NET_ADMIN
     if not utils.check_linux_capability("NET_ADMIN"):
         raise click.UsageError(
@@ -306,11 +307,17 @@ def check_capabilities():
                 in sh(f"echo 1 >{vhost_dev}", check=False).stderr
             ):
                 raise click.UsageError(
-                    "device permissions are required for macvlan network, "
-                    'consider run container with "--device-cgroup-rule=\'c *:* rwm\'" or "--privileged"'
+                    "macvlan network was enabled, "
+                    'please run container with "--device-cgroup-rule=\'c *:* rwm\'" or "--privileged"'
                 )
     finally:
         sh(f"rm -f {vhost_dev}")
+    # kvm
+    kvm_dev = "/dev/kvm"
+    if c.enable_accel and utils.is_kvm_avaliable() and not os.path.exists(kvm_dev):
+        raise click.UsageError(
+            "'kvm' was enabled, please run container with '--device /dev/kvm' or '--privileged'"
+        )
 
 
 OVMF_DIR = "/usr/share/OVMF"
