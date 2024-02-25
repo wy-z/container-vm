@@ -261,12 +261,13 @@ def configure_port_forward(
     for spec in c.port_forwards:
         if ":" not in spec:
             raise ValueError(f"invalid port forward spec: {spec}")
-        int_port, pub_port = spec.split(":")
+        host_port, vm_port = spec.split(":")
+        log.info(f"Forwarding {host_port} -> {ip}:{vm_port}")
         sh(
-            f"iptables -t nat -A PREROUTING -p tcp --dport {pub_port} -j DNAT --to-destination {ip}:{int_port}"
+            f"iptables -t nat -A PREROUTING -p tcp --dport {host_port} -j DNAT --to-destination {ip}:{vm_port}"
         )
         sh(
-            f"iptables -t nat -A POSTROUTING -p tcp -d {ip} --dport {int_port} -j MASQUERADE"
+            f"iptables -t nat -A POSTROUTING -p tcp -d {ip} --dport {vm_port} -j MASQUERADE"
         )
 
 
@@ -307,7 +308,7 @@ def check_capabilities():
                 in sh(f"echo 1 >{vhost_dev}", check=False).stderr
             ):
                 raise click.UsageError(
-                    "macvlan network was enabled, "
+                    "macvlan network is enabled, "
                     'please run container with "--device-cgroup-rule=\'c *:* rwm\'" or "--privileged"'
                 )
     finally:
@@ -316,7 +317,7 @@ def check_capabilities():
     kvm_dev = "/dev/kvm"
     if c.enable_accel and utils.is_kvm_avaliable() and not os.path.exists(kvm_dev):
         raise click.UsageError(
-            "'kvm' was enabled, please run container with '--device /dev/kvm' or '--privileged'"
+            "'kvm' is enabled, please run container with '--device /dev/kvm' or '--privileged'"
         )
 
 
