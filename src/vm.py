@@ -261,12 +261,13 @@ def configure_port_forward(
     for spec in c.port_forwards:
         if ":" not in spec:
             raise ValueError(f"invalid port forward spec: {spec}")
-        int_port, pub_port = spec.split(":")
+        host_port, vm_port = spec.split(":")
+        log.info(f"Forwarding {host_port} -> {ip}:{vm_port}")
         sh(
-            f"iptables -t nat -A PREROUTING -p tcp --dport {pub_port} -j DNAT --to-destination {ip}:{int_port}"
+            f"iptables -t nat -A PREROUTING -p tcp --dport {host_port} -j DNAT --to-destination {ip}:{vm_port}"
         )
         sh(
-            f"iptables -t nat -A POSTROUTING -p tcp -d {ip} --dport {int_port} -j MASQUERADE"
+            f"iptables -t nat -A POSTROUTING -p tcp -d {ip} --dport {vm_port} -j MASQUERADE"
         )
 
 
