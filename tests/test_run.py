@@ -49,29 +49,29 @@ def test_opts(cli, c):
     assert len(c.ifaces) == 2
 
 
-def test_run(cli):
+def test_run(cli, c):
+    ret = cli("run --dry --cpu=2 --mem=1024")
+    assert ret.exit_code == 0
+    args = c.qemu_args
+    assert c.cpu_num == 2
+    assert "macvtap" in args
+    assert "netdev" in args
+    assert "-machine" in args
+    assert "-boot" in args
+
+
+def test_ext_args(cli, c):
+    ret = cli("run --dry ext-args -- -cpu=host")
+    assert ret.exit_code == 0
+    args = c.qemu_args
+    assert "-cpu=host" in args
+
+
+def test_windows(cli, c):
     ret = cli(
-        [
-            "run",
-            "--dry",
-            "--cpu=2",
-            "--mem=1024",
-        ]
+        "run --dry windows",
     )
     assert ret.exit_code == 0
-
-
-def test_ext_args(cli):
-    ret = cli(["run", "--dry", "ext-args", "--", "-cpu=host"])
-    assert ret.exit_code == 0
-
-
-def test_windows(cli):
-    ret = cli(
-        [
-            "run",
-            "--dry",
-            "windows",
-        ]
-    )
-    assert ret.exit_code == 0
+    args = c.qemu_args
+    assert c.boot_mode == meta.BootMode.WINDOWS
+    assert "windows" in args

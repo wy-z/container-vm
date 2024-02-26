@@ -1,6 +1,7 @@
 # docker-vm
 
 [![Pulls]][hub_url]
+[![image](https://raw.githubusercontent.com/wy-z/container-vm/main/tests/coverage.svg)](https://github.com/wy-z/container-vm)
 
 Run qemu/kvm VM inside a docker container
 

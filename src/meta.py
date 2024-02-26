@@ -137,6 +137,10 @@ class Config(pydantic.BaseModel):
             kwargs["qemu"] = QemuConfig(qemu_opts)
         super().__init__(*args, **kwargs)
 
+    @property
+    def qemu_args(self):
+        return self.qemu.to_args() + (self.extra_args and " " + self.extra_args)
+
     def update(self, **kwargs):
         for k, v in kwargs.items():
             if not hasattr(self, k):
