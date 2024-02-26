@@ -39,20 +39,11 @@ def get_qemu_archs():
     return [x.split("-")[-1] for x in bins]
 
 
-def gen_netdev_name(mode: meta.NetworkMode) -> tuple[str, str]:
-    ifaces = utils.list_interfaces()
-    while True:
-        dev_id = str(uuid.uuid4().fields[-1])[:8]
-        dev_name = mode + dev_id
-        if dev_name not in ifaces:
-            return dev_name, dev_id
-
-
 def get_vm_interfaces():
     c = meta.config
     if not c.ifaces:
         return [utils.get_default_interface()]
-    ifaces = utils.list_interfaces() - utils.list_bridges()
+    ifaces = utils.list_interfaces()
     for iface in c.ifaces:
         if iface not in ifaces:
             raise ValueError(f"iface '{iface}' not found in '{ifaces}'")
@@ -130,13 +121,22 @@ def get_unused_ip(network: ipaddress.IPv4Network) -> str | None:
         if utils.is_host_avaliable(ip):
             continue
         return str(ip)
-    return
+    return None
+
+
+def _gen_netdev_name(mode: meta.NetworkMode) -> tuple[str, str]:
+    ifaces = utils.list_interfaces()
+    while True:
+        dev_id = str(uuid.uuid4().fields[-1])[:8]
+        dev_name = mode + dev_id
+        if dev_name not in ifaces:
+            return dev_name, dev_id
 
 
 def setup_bridge(
     iface: str, mode: meta.NetworkMode, ipnet: str, index: int = 0, is_default=False
 ) -> tuple[str, str | None]:
-    dev_name, dev_id = gen_netdev_name(mode)
+    dev_name, dev_id = _gen_netdev_name(mode)
     fd = 10 + index * 10
     vhost_fd = fd + 1
     nic_id = "nic" + str(index)
@@ -412,24 +412,36 @@ def configure_opts():
         c.qemu.insert(0, {"cdrom": str(c.iso)})
 
 
+def _is_host_network_mode():
+    devs = ["docker0", "cni-podman0"]
+    if any(os.path.exists(os.path.join("/sys/devices/virtual/net", i)) for i in devs):
+        return True
+    return False
+
+
 def run_qemu():
     check_capabilities()
     configure_opts()
     # boot
     configure_boot()
-    # network
-    gw, iface_map = configure_network()
-    # port forward
-    configure_port_forward(gw, iface_map)
-    # dhcp
-    configure_dhcp(gw, iface_map)
+
+    c = meta.config
+    if not _is_host_network_mode() and c.setup_netdev:
+        # network
+        gw, iface_map = configure_network()
+        # port forward
+        configure_port_forward(gw, iface_map)
+        # dhcp
+        configure_dhcp(gw, iface_map)
+    else:
+        log.warn("'host' network mode detected, skip network setup")
+
     # console
     configure_console()
     # vnc
     configure_vnc()
 
     # run qemu
-    c = meta.config
     cmd = f"qemu-system-{c.arch} {c.qemu.to_args()} {c.extra_args}"
     log.info(f"Running {cmd} ...")
     sh(cmd, stdout=None, stderr=None)

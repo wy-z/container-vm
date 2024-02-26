@@ -121,6 +121,7 @@ class Config(pydantic.BaseModel):
     enable_dhcp: bool = True
     enable_vnc_web: bool = True
     enable_console: bool = True
+    setup_netdev: bool = True
     machine: str | None = None
     boot_mode: BootMode = BootMode.LEGACY
     boot: str | None = None

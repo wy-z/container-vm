@@ -97,6 +97,7 @@ Then you can:
 │ --iso                            PATH                                                                       ISO file path [default: None]                                               │
 │ --accel          --no-accel                                                                                 Enable acceleration [default: accel]                                        │
 │ --macvlan        --no-macvlan                                                                               Enable macvlan network, otherwise use bridge network [default: macvlan]     │
+│ --netdev         --no-netdev                                                                                Setup netdev or not [default: netdev]                                       │
 │ --dhcp           --no-dhcp                                                                                  Enable DHCP [default: dhcp]                                                 │
 │ --vnc-web        --no-vnc-web                                                                               Enable VNC web client (noVNC) [default: vnc-web]                            │
 │ --console        --no-console                                                                               Enable Qemu monitor (mon+telnet+qmp) [default: console]                     │

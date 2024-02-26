@@ -50,11 +50,6 @@ def list_interfaces():
     return set(x.strip() for x in ret.stdout.decode().split())
 
 
-def list_bridges():
-    ret = sh("brctl show | tail -n +2 | awk '{print $1}'")
-    return set(ret.stdout.decode().split())
-
-
 def list_nameservers():
     ret = sh("grep nameserver /etc/resolv.conf | sed 's/nameserver //'")
     return [i.strip() for i in ret.stdout.decode().splitlines()]
