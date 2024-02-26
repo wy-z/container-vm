@@ -36,7 +36,7 @@ Then you can:
 
       More features are on the way.
 
-## Windows Usage
+## Windows VM
 
 1.  Download windows iso (`Win11_23H2_x64v2.iso` or [tiny11](https://archive.org/details/tiny11-2311))
 2.  Download VirtIO from `https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio` (`virtio-win.iso`)
