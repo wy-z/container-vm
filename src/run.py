@@ -13,8 +13,6 @@ log = logging.getLogger(__name__)
 
 
 def run_qemu(*args, **kwargs):
-    if meta.config.dry_run:
-        return
     vm.run_qemu()
 
 

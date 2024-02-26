@@ -445,7 +445,7 @@ def run_qemu():
     configure_vnc()
 
     # run qemu
-    cmd = f"qemu-system-{c.arch} {c.qemu.to_args()} {c.extra_args}"
+    cmd = f"qemu-system-{c.arch} {c.qemu_args}"
     log.info(f"Running {cmd} ...")
     if c.dry_run:
         return

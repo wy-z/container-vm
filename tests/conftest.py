@@ -1,6 +1,7 @@
 import copy
 import functools
 import json
+import logging
 import os
 
 import pytest
@@ -8,6 +9,8 @@ import typer.testing
 
 import main
 from src import meta
+
+logging.basicConfig(format="%(asctime)s %(levelname)s:%(message)s", level=logging.INFO)
 
 
 def pytest_collection_modifyitems(config, items):
