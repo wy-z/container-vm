@@ -96,7 +96,7 @@ settings = dynaconf.Dynaconf(
 
 
 class WinOpts(pydantic.BaseModel):
-    virtio_iso: pathlib.Path
+    virtio_iso: pathlib.Path | None
     enable_tmp: bool = True
 
 

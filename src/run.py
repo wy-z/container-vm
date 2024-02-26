@@ -113,7 +113,7 @@ def windows(
         try:
             vm.setup_swtpm()
         except Exception:
-            log.warn("failed to setup swtpm, ignore TPM support")
+            log.warning("failed to setup swtpm, ignore TPM support")
     if c.boot_mode == meta.BootMode.LEGACY:
         c.boot_mode = meta.BootMode.WINDOWS
 
