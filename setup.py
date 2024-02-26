@@ -9,8 +9,6 @@ extras_require = {
         "isort",
         "mypy",
         "pytest",
-        "pytest-variables[yaml]",
-        "pytest-xdist",
         "pytest-cov",
     ],
     "build": ["pyinstaller", "pyinstaller-hooks-contrib"],

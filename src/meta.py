@@ -130,6 +130,7 @@ class Config(pydantic.BaseModel):
     extra_args: str = ""
     win_opts: WinOpts | None = None
     port_forwards: list[str] | None = None
+    dry_run: bool = False
 
     def __init__(self, *args, **kwargs):
         if (qemu_opts := kwargs.get("qemu")) and not isinstance(qemu_opts, QemuConfig):

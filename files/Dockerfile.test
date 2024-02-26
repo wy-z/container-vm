@@ -1,0 +1,7 @@
+FROM container-vm-dev
+
+ENV CONTAINER_VM_TEST_IN_CONTAINER=1
+
+ADD ./requirements-dev.txt /requirements-dev.txt
+RUN set -e \
+    && pip install -r /requirements-dev.txt

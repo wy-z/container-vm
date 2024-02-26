@@ -161,3 +161,5 @@ cython_debug/
 
 version.txt
 .storage
+.pytest-nodeids
+tmp/
