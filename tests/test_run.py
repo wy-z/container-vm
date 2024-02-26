@@ -47,3 +47,31 @@ def test_opts(cli, c):
     assert c.boot_mode == meta.BootMode.SECURE
     assert len(c.networks) == 2
     assert len(c.ifaces) == 2
+
+
+def test_run(cli):
+    ret = cli(
+        [
+            "run",
+            "--dry",
+            "--cpu=2",
+            "--mem=1024",
+        ]
+    )
+    assert ret.exit_code == 0
+
+
+def test_ext_args(cli):
+    ret = cli(["run", "--dry", "ext-args", "--", "-cpu=host"])
+    assert ret.exit_code == 0
+
+
+def test_windows(cli):
+    ret = cli(
+        [
+            "run",
+            "--dry",
+            "windows",
+        ]
+    )
+    assert ret.exit_code == 0

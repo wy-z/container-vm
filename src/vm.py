@@ -353,7 +353,7 @@ def _get_prefer_machine():
     active_machs = utils.get_qemu_machines(c.arch, active_only=True)
     if active_machs:
         return active_machs[0]
-    log.warn("cannot find available machine type, consider assign '--machine'")
+    log.warning("cannot find available machine type, consider assign '--machine'")
     return
 
 
@@ -378,7 +378,7 @@ def configure_boot():
             vars = "OVMF_VARS_4M.fd"
         case meta.BootMode.SECURE:
             rom = "OVMF_CODE_4M.secboot.fd"
-            vars = "OVMF_VARS_4M.secboot.fd"
+            vars = "OVMF_VARS_4M.fd"
         case meta.BootMode.WINDOWS:
             rom = "OVMF_CODE_4M.ms.fd"
             vars = "OVMF_VARS_4M.ms.fd"
@@ -437,7 +437,7 @@ def run_qemu():
         # dhcp
         configure_dhcp(gw, iface_map)
     else:
-        log.warn("'host' network mode detected, skip network setup")
+        log.warning("'host' network mode detected, skip network setup")
 
     # console
     configure_console()
