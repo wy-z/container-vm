@@ -10,7 +10,7 @@ Run qemu/kvm VM inside a docker container
 mkdir tmp && cp tmp
 wget https://dl-cdn.alpinelinux.org/alpine/v3.19/releases/x86_64/alpine-virt-3.19.1-x86_64.iso
 docker run --name container-vm --rm -v $PWD:/storage --cap-add=NET_ADMIN --device-cgroup-rule='c *:* rwm' \
-    --device=/dev/kvm -p 8080:8080 weiyang/container-vm run --iso /storage/alpine-virt-3.19.0-x86_64.iso
+    --device=/dev/kvm -p 8080:8080 weiyang/container-vm run --iso /storage/alpine-virt-3.19.1-x86_64.iso
 ```
 
 ### MacOS
@@ -19,7 +19,7 @@ docker run --name container-vm --rm -v $PWD:/storage --cap-add=NET_ADMIN --devic
 mkdir tmp && cp tmp
 wget https://dl-cdn.alpinelinux.org/alpine/v3.19/releases/x86_64/alpine-virt-3.19.1-x86_64.iso
 docker run --name container-vm --rm -v $PWD:/storage --cap-add=NET_ADMIN --device-cgroup-rule='c *:* rwm' \
-    -p 8080:8080 weiyang/container-vm run --iso /storage/alpine-virt-3.19.0-x86_64.iso
+    -p 8080:8080 weiyang/container-vm run --iso /storage/alpine-virt-3.19.1-x86_64.iso
 ```
 
 Then you can:
@@ -27,7 +27,7 @@ Then you can:
 - Open `http://localhost:8080` to visit VM graphic
 - `docker exec -it container-vm telnet 127.0.0.1 10000` to visit VM console
   - `Ctrl-A-C` -> Qemu monitor console
-  - `Ctrl-]` to exit telnet
+  - `Ctrl-]` + `quit` to exit telnet
 
 ## Features
 
