@@ -244,6 +244,9 @@ def configure_dhcp(
     gw: ipaddress.IPv4Address,
     ifaces: dict[str, tuple[str, str]],
 ):
+    if not meta.config.enable_dhcp:
+        return
+
     network, mac, ip = _select_default_network(gw, ifaces)
     log_file = "/var/log/dnsmasq.log"
     dnsmasq_opts = [
@@ -444,6 +447,8 @@ def run_qemu():
     # run qemu
     cmd = f"qemu-system-{c.arch} {c.qemu.to_args()} {c.extra_args}"
     log.info(f"Running {cmd} ...")
+    if c.dry_run:
+        return
     sh(cmd, stdout=None, stderr=None)
 
 

@@ -4,7 +4,7 @@ FROM debian:stable-slim
 ENV NOVNC_DIR /opt/noVNC
 ENV NOVNC_VERSION 1.4.0
 
-RUN set -ex \
+RUN set -e \
     && apt update \
     && apt --no-install-recommends -y install \
     ca-certificates \

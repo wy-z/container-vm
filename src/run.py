@@ -13,6 +13,8 @@ log = logging.getLogger(__name__)
 
 
 def run_qemu(*args, **kwargs):
+    if meta.config.dry_run:
+        return
     vm.run_qemu()
 
 
@@ -65,6 +67,7 @@ def main(
         "--network",
         help="(multiple) Special VM network CIDR (IPv4) (e.g. 192.168.1.0/24)",
     ),
+    dry: bool = typer.Option(default=False, help="Dry run"),
 ):
     meta.config.update(
         arch=arch,
@@ -81,7 +84,8 @@ def main(
         boot_mode=boot_mode,
         boot=boot,
         ifaces=ifaces,
-        networks=[ipaddress.IPv4Network(n) for n in networks],
+        networks=[ipaddress.IPv4Network(n, strict=False) for n in networks],
+        dry_run=dry,
     )
 
 

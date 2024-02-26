@@ -2,7 +2,7 @@ FROM container-vm-base
 
 ENV PIP_BREAK_SYSTEM_PACKAGES=1
 
-RUN set -ex \
+RUN set -e \
     && apt update \
     && apt --no-install-recommends -y install \
     python3 \
