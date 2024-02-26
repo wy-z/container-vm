@@ -44,6 +44,7 @@ def main(
     macvlan: bool = typer.Option(
         default=True, help="Enable macvlan network, otherwise use bridge network"
     ),
+    netdev: bool = typer.Option(default=True, help="Setup netdev or not"),
     dhcp: bool = typer.Option(default=True, help="Enable DHCP"),
     vnc_web: bool = typer.Option(default=True, help="Enable VNC web client (noVNC)"),
     console: bool = typer.Option(
@@ -72,6 +73,7 @@ def main(
         iso=iso,
         enable_accel=accel,
         enable_macvlan=macvlan,
+        setup_netdev=netdev,
         enable_dhcp=dhcp,
         enable_vnc_web=vnc_web,
         enable_console=console,
@@ -148,7 +150,9 @@ def apply_disk(
 @app.command()
 def ext_args(args: list[str] = typer.Argument(..., help="External Qemu args")):
     """External Qemu args"""
-    meta.config.extra_args += " ".join(args)
+    if not args:
+        return
+    meta.config.extra_args += " " + " ".join(args)
 
 
 @app.command()

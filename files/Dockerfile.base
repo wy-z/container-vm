@@ -17,7 +17,6 @@ RUN set -ex \
     iproute2 \
     dnsmasq \
     net-tools \
-    bridge-utils \
     netcat-openbsd \
     inetutils-ping \
     caddy \
