@@ -1,5 +1,7 @@
 # docker-vm
 
+[![Pulls]][hub_url]
+
 Run qemu/kvm VM inside a docker container
 
 ## Quick Start
@@ -201,3 +203,6 @@ Then you can:
 ## License
 
 MIT
+
+[hub_url]: https://hub.docker.com/r/weiyang/container-vm/
+[Pulls]: https://img.shields.io/docker/pulls/weiyang/container-vm.svg?style=flat&label=pulls&logo=docker
