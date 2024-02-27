@@ -36,13 +36,15 @@ Then you can:
 
 - Simplicity: Utilizes a clean, straightforward QEMU setup for hassle-free virtualization, focusing on ease of use.
 - Flexibility: Offers full compatibility and extensibility with customizable configurations, catering to diverse needs and ensuring easy adaptability for future expansions.
-
-      More features are on the way.
+- Native Performance: Delivers exceptional efficiency and optimal performance through the use of advanced technologies such as Tap, MacVlan, and KVM acceleration.
 
 ## Windows VM
 
 1.  Download windows iso (`Win11_23H2_x64v2.iso` or [tiny11](https://archive.org/details/tiny11-2311))
 2.  Download VirtIO from `https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio` (`virtio-win.iso`)
+
+        If the hard drive is not detected, remember to install the drivers from the VirtIO ISO
+
 3.  Start container
 
     Linux
@@ -163,6 +165,7 @@ Then you can:
 ### Port Forwarding
 
     `run xxx port-forward -p 22:22 -p 3389:3389`
+    Ports 22 and 3389 are set to forward automatically by default
 
 ```
 ❯ python main.py run port-forward --help
