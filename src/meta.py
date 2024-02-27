@@ -2,7 +2,6 @@ import abc
 import enum
 import ipaddress
 import os
-import pathlib
 
 import dynaconf
 import pydantic
@@ -96,7 +95,7 @@ settings = dynaconf.Dynaconf(
 
 
 class WinOpts(pydantic.BaseModel):
-    virtio_iso: pathlib.Path | None
+    virtio_iso: str | None
     enable_tmp: bool = True
 
 
@@ -115,7 +114,7 @@ class Config(pydantic.BaseModel):
     arch: str = "x86_64"
     cpu_num: int | None = None
     mem_size: int | None = None
-    iso: pathlib.Path | None = None
+    iso: str | None = None
     enable_accel: bool = True
     enable_macvlan: bool = True
     enable_dhcp: bool = True
