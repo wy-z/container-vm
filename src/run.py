@@ -1,7 +1,6 @@
 import ipaddress
 import logging
 import os
-import pathlib
 import typing
 
 import click
@@ -39,7 +38,7 @@ def main(
     arch: str = typer.Option(
         default="x86_64", help="VM arch", click_type=click.Choice(QEMU_ARCHS)
     ),
-    iso: pathlib.Path = typer.Option(default=None, help="ISO file path", exists=True),
+    iso: str = typer.Option(default=None, help="ISO file path or drive url"),
     accel: bool = typer.Option(default=True, help="Enable acceleration"),
     macvlan: bool = typer.Option(
         default=True, help="Enable macvlan network, otherwise use bridge network"
@@ -89,11 +88,10 @@ def main(
 
 @app.command()
 def windows(
-    virtio_iso: pathlib.Path = typer.Option(
+    virtio_iso: str = typer.Option(
         None,
-        help="Window virtio driver iso, "
+        help="Window virtio driver ISO path or drive url, "
         "download from https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio",
-        exists=True,
     ),
     tpm: bool = typer.Option(True, help="Enable TPM"),
 ):

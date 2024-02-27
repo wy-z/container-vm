@@ -10,6 +10,7 @@ RUN set -e \
     ca-certificates \
     qemu-system \
     qemu-utils \
+    qemu-block-extra \
     ovmf \
     wget \
     swtpm \
