@@ -12,7 +12,7 @@ Run qemu/kvm VM inside a docker container
 ```sh
 mkdir tmp && cp tmp
 wget https://dl-cdn.alpinelinux.org/alpine/v3.19/releases/x86_64/alpine-virt-3.19.1-x86_64.iso
-docker run --name container-vm --rm -v $PWD:/storage --cap-add=NET_ADMIN --device-cgroup-rule='c *:* rwm' \
+docker run --name container-vm --rm -v $PWD:/storage --cap-add=NET_ADMIN \
     --device=/dev/kvm -p 8080:8080 weiyang/container-vm run --iso /storage/alpine-virt-3.19.1-x86_64.iso
 ```
 
@@ -22,7 +22,7 @@ docker run --name container-vm --rm -v $PWD:/storage --cap-add=NET_ADMIN --devic
 mkdir tmp && cp tmp
 wget https://dl-cdn.alpinelinux.org/alpine/v3.19/releases/x86_64/alpine-virt-3.19.1-x86_64.iso
 docker run --name container-vm --rm -v $PWD:/storage --cap-add=NET_ADMIN --device-cgroup-rule='c *:* rwm' \
-    -p 8080:8080 weiyang/container-vm run --iso /storage/alpine-virt-3.19.1-x86_64.iso
+    -p 8080:8080 weiyang/container-vm run --macvlan --iso /storage/alpine-virt-3.19.1-x86_64.iso
 ```
 
 Then you can:
@@ -51,7 +51,7 @@ Then you can:
 
     ```sh
     docker run --rm -v $PWD:/storage --cap-add=NET_ADMIN --device /dev/kvm \
-        --device-cgroup-rule='c *:* rwm' -p 8080:8080 weiyang/container-vm run -c 4 -m 8192 \
+        -p 8080:8080 weiyang/container-vm run -c 4 -m 8192 \
         --iso /storage/Win11_23H2_x64v2.iso windows --virtio-iso /storage/virtio-win.iso \
         apply-disk -s 64G hda ext-args -- -cpu host
     ```
@@ -60,7 +60,7 @@ Then you can:
 
     ```sh
     docker run --rm -v $PWD:/storage --cap-add=NET_ADMIN --device-cgroup-rule='c *:* rwm' \
-        -p 8080:8080 weiyang/container-vm run -c 4 -m 8192 \
+        -p 8080:8080 weiyang/container-vm run --macvlan -c 4 -m 8192 \
         --iso /storage/Win11_23H2_x64v2.iso windows --virtio-iso /storage/virtio-win.iso \
         apply-disk -s 64G hda
     ```
@@ -78,8 +78,8 @@ Then you can:
 
 ### Container capability limits
 
-1. Minimum capability requirement is `--cap-add=NET_ADMIN`, run with `--no-macvlan --no-accel`
-2. `--device-cgroup-rule='c *:* rwm'`/`--no-macvlan` will disable macvlan, use tap bridge
+1. Minimum capability requirement is `--cap-add=NET_ADMIN`, run with `--no-accel`
+2. `--device-cgroup-rule='c *:* rwm'`/`--macvlan` will enable macvlan, otherwise use tap bridge
 3. `--device=/dev/kvm`/`--no-accel` will disable IO acceleration, not recommended
 
 ## CLI Commands
