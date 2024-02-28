@@ -82,6 +82,13 @@ Then you can:
 2. `--device-cgroup-rule='c *:* rwm'`/`--macvlan` will enable macvlan, otherwise use tap bridge
 3. `--device=/dev/kvm`/`--no-accel` will disable IO acceleration, not recommended
 
+### Podman Support
+
+         The testing for Podman is not yet complete; you may submit an Issue if needed.
+
+    - May need to add more capabilities, such as `--cap-add NET_RAW`
+    - May need to add more devices, such as `--device=/dev/net/tun`
+
 ## CLI Commands
 
 ### Run
