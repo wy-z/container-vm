@@ -141,9 +141,6 @@ def setup_bridge(
     vhost_fd = fd + 1
     nic_id = "nic" + str(index)
     new_mac = utils.gen_random_mac()
-    # mknod /dev/vhost-net
-    if not os.path.exists("/dev/vhost-net"):
-        sh("mknod -m 660 /dev/vhost-net c 10 238")
     if mode == meta.NetworkMode.TAP_BRIDGE:
         tap_name = _setup_tap_bridge(iface, dev_name, dev_id, ipnet)
         meta.config.qemu.append(
@@ -168,6 +165,9 @@ def setup_bridge(
             sh(f"ip link set {host_macvlan} up")
 
         vtapdev = _setup_macvlan_bridge(iface, dev_name, dev_id, new_mac, ipnet)
+        # mknod /dev/vhost-net
+        if not os.path.exists("/dev/vhost-net"):
+            sh("mknod -m 660 /dev/vhost-net c 10 238")
         meta.config.qemu.append(
             {
                 "netdev": {
