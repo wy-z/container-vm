@@ -41,7 +41,7 @@ def main(
     iso: str = typer.Option(default=None, help="ISO file path or drive url"),
     accel: bool = typer.Option(default=True, help="Enable acceleration"),
     macvlan: bool = typer.Option(
-        default=True, help="Enable macvlan network, otherwise use bridge network"
+        default=False, help="Enable macvlan network, otherwise use bridge network"
     ),
     netdev: bool = typer.Option(default=True, help="Setup netdev or not"),
     dhcp: bool = typer.Option(default=True, help="Enable DHCP"),

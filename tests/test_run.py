@@ -54,7 +54,7 @@ def test_run(cli, c):
     assert ret.exit_code == 0
     args = c.qemu_args
     assert c.cpu_num == 2
-    assert "macvtap" in args
+    assert "macvtap" not in args
     assert "netdev" in args
     assert "-machine" in args
     assert "-boot" in args
