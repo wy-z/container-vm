@@ -183,5 +183,5 @@ def exec_sh(
         None, "-f", "--file", help="(multiple) shell script file", exists=True
     ),
 ):
-    """Exec shell script files"""
+    """Exec shell script files before start Qemu"""
     meta.config.exec_files.extend(files)
