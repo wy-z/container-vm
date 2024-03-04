@@ -1,5 +1,5 @@
 # container-vm-base
-FROM debian:stable-slim
+FROM debian:trixie-slim
 
 ENV NOVNC_DIR /opt/noVNC
 ENV NOVNC_VERSION 1.4.0
@@ -11,6 +11,7 @@ RUN set -e \
     qemu-system \
     qemu-utils \
     qemu-block-extra \
+    qemu-system-modules-opengl \
     ovmf \
     wget \
     swtpm \

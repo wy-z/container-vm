@@ -1,6 +1,7 @@
 import ipaddress
 import logging
 import os
+import pathlib
 import typing
 
 import click
@@ -51,7 +52,14 @@ def main(
     ),
     machine: str = typer.Option(None, help="Machine type"),
     boot: typing.Optional[str] = typer.Option(
-        "once=dc", help="Boot options", parser=str_or_none
+        "once=dc",
+        help="Boot options (no|false|none|nil|null == disable)",
+        parser=str_or_none,
+    ),
+    vga: typing.Optional[str] = typer.Option(
+        "virtio",
+        help="Setup VGA (virtio)",
+        parser=str_or_none,
     ),
     boot_mode: meta.BootMode = typer.Option(meta.BootMode.LEGACY, help="Boot mode"),
     ifaces: list[str] = typer.Option(
@@ -71,12 +79,13 @@ def main(
         mem_size=mem_size,
         cpu_num=cpu_num,
         iso=iso,
+        vga=vga,
         enable_accel=accel,
         enable_macvlan=macvlan,
-        setup_netdev=netdev,
         enable_dhcp=dhcp,
         enable_vnc_web=vnc_web,
         enable_console=console,
+        setup_netdev=netdev,
         machine=machine,
         boot_mode=boot_mode,
         boot=boot,
@@ -162,4 +171,17 @@ def port_forward(
     ),
 ):
     """Forward VM ports"""
-    meta.config.port_forwards = ports
+    if meta.config.port_forwards is None:
+        meta.config.port_forwards = ports
+        return
+    meta.config.port_forwards.extend(ports)
+
+
+@app.command()
+def exec_sh(
+    files: list[pathlib.Path] = typer.Option(
+        None, "-f", "--file", help="(multiple) shell script file", exists=True
+    ),
+):
+    """Exec shell script files"""
+    meta.config.exec_files.extend(files)

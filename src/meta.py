@@ -2,6 +2,7 @@ import abc
 import enum
 import ipaddress
 import os
+import pathlib
 
 import dynaconf
 import pydantic
@@ -124,12 +125,14 @@ class Config(pydantic.BaseModel):
     machine: str | None = None
     boot_mode: BootMode = BootMode.LEGACY
     boot: str | None = None
+    vga: str | None = None
     ifaces: list[str] = []
     networks: list[ipaddress.IPv4Network] = []
     extra_args: str = ""
     win_opts: WinOpts | None = None
     port_forwards: list[str] | None = None
     dry_run: bool = False
+    exec_files: list[pathlib.Path] = []
 
     def __init__(self, *args, **kwargs):
         if (qemu_opts := kwargs.get("qemu")) and not isinstance(qemu_opts, QemuConfig):
