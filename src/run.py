@@ -130,7 +130,7 @@ def gen_disk_name(sn: str, type="qcow2"):
 
 @app.command()
 def apply_disk(
-    name: str = typer.Argument(..., help="Disk name (e.g. disk1)"),
+    name: str = typer.Option(..., "-n", "--name", help="Disk name (e.g. disk1)"),
     size: str = typer.Option("16G", "-s", "--size", help="Disk size (e.g. 32G)"),
     file_type: str = typer.Option("qcow2", help="Drive file type (e.g. qcow2,raw)"),
     if_type: str = typer.Option(None, help="Drive interface type (e.g. virtio,ide)"),
