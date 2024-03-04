@@ -206,7 +206,7 @@ Then you can:
 
 ### Execute shell script
 
-    `run xxx exec-sh xxx.sh`
+    `run xxx exec-sh -f xxx.sh`
 
 ```
 ❯ python main.py run exec-sh --help
