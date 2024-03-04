@@ -1,8 +1,0 @@
-FROM weiyang/container-vm
-
-RUN set -e \
-    && apt update \
-    && apt --no-install-recommends -y install \
-    glusterfs-common \
-    && apt clean \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*

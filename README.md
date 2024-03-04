@@ -53,7 +53,7 @@ Then you can:
     docker run --rm -v $PWD:/storage --cap-add=NET_ADMIN --device /dev/kvm \
         -p 8080:8080 weiyang/container-vm run -c 4 -m 8192 \
         --iso /storage/Win11_23H2_x64v2.iso windows --virtio-iso /storage/virtio-win.iso \
-        apply-disk -s 64G hda ext-args -- -cpu host
+        apply-disk -s 64G -n hda ext-args -- -cpu host
     ```
 
     MacOS
@@ -62,7 +62,7 @@ Then you can:
     docker run --rm -v $PWD:/storage --cap-add=NET_ADMIN --device-cgroup-rule='c *:* rwm' \
         -p 8080:8080 weiyang/container-vm run --macvlan -c 4 -m 8192 \
         --iso /storage/Win11_23H2_x64v2.iso windows --virtio-iso /storage/virtio-win.iso \
-        apply-disk -s 64G hda
+        apply-disk -s 64G -n hda
     ```
 
          On MacOS, rm `--device=/dev/kvm` and `ext-args -- -cpu host`
@@ -72,7 +72,7 @@ Then you can:
     3. `-c 4 -m 8192` 4 cpu cores, 8G memory
     4. `--iso /storage/Win11_23H2_x64v2.iso` add boot cdrom
     5. `windows --virtio-iso /storage/virtio-win.iso` add virtio iso
-    6. `apply-disk -s 64G hda` create a 64G disk if not exists
+    6. `apply-disk -s 64G -n hda` create a 64G disk if not exists
     7. `ext-args -- -cpu host` host-passthrough cpu mode, all flags after `ext-args --` will be passed to qemu
     8. VirtIO iso is recommended for best performance
 
@@ -130,24 +130,22 @@ Then you can:
 
 ### Apply Disk
 
-    `run xxx apply-disk -s 64G hda apply-disk -s 32G hdb`
+    `run xxx apply-disk -s 64G -n hda apply-disk -s 32G hdb`
 
 ```
 ❯ python main.py run apply-disk --help
 
- Usage: main.py run apply-disk [OPTIONS] NAME
+ Usage: main.py run apply-disk [OPTIONS]
 
  Apply VM disk
 
-╭─ Arguments ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
-│ *    name      TEXT  Disk name (e.g. disk1) [default: None] [required]                                                                                                                  │
-╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 ╭─ Options ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
-│ --size       -s      TEXT  Disk size (e.g. 32G) [default: 16G]                                                                                                                          │
-│ --file-type          TEXT  Drive file type (e.g. qcow2,raw) [default: qcow2]                                                                                                            │
-│ --if-type            TEXT  Drive interface type (e.g. virtio,ide) [default: None]                                                                                                       │
-│ --opts               TEXT  External drive options (e.g. index=i,format=f) [default: None]                                                                                               │
-│ --help                     Show this message and exit.                                                                                                                                  │
+│ *  --name       -n      TEXT  Disk name (e.g. disk1) [default: None] [required]                                                                                                         │
+│    --size       -s      TEXT  Disk size (e.g. 32G) [default: 16G]                                                                                                                       │
+│    --file-type          TEXT  Drive file type (e.g. qcow2,raw) [default: qcow2]                                                                                                         │
+│    --if-type            TEXT  Drive interface type (e.g. virtio,ide) [default: None]                                                                                                    │
+│    --opts               TEXT  External drive options (e.g. index=i,format=f) [default: None]                                                                                            │
+│    --help                     Show this message and exit.                                                                                                                               │
 ╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 ```
 

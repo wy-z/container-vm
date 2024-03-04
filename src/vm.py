@@ -304,7 +304,7 @@ def configure_vnc():
     c = meta.config
     if not c.enable_vnc_web:
         return
-    c.qemu.append({"vnc": f":0,websocket={meta.VmPort.VNC_WS}", "vga": "virtio"})
+    c.qemu.append({"vnc": f":0,websocket={meta.VmPort.VNC_WS}"})
     # run caddy
     log.info("Running caddy ...")
     sh("caddy start --config /etc/caddy/Caddyfile", stdout=None, stderr=None)
@@ -413,6 +413,9 @@ def configure_opts():
     # cdrom
     if c.iso:
         c.qemu.insert(0, {"cdrom": str(c.iso)})
+    # vga
+    if c.vga is not None:
+        c.qemu.append({"vga": c.vga})
 
 
 def _is_host_network_mode():
@@ -423,12 +426,17 @@ def _is_host_network_mode():
 
 
 def run_qemu():
+    c = meta.config
     check_capabilities()
+    # exec files
+    for f in c.exec_files:
+        log.info(f"Executing {f} ...")
+        sh(f"bash {f}", stdout=None, stderr=None)
+
     configure_opts()
     # boot
     configure_boot()
 
-    c = meta.config
     if not _is_host_network_mode() and c.setup_netdev:
         # network
         gw, iface_map = configure_network()
