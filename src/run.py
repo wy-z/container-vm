@@ -27,7 +27,7 @@ QEMU_ARCHS = vm.get_qemu_archs()
 
 
 def str_or_none(value: str):
-    if value.lower() in ["no", "false", "none", "nil", "null"]:
+    if value.lower() in ["-"]:
         return None
     return value
 
@@ -53,12 +53,12 @@ def main(
     machine: str = typer.Option(None, help="Machine type"),
     boot: typing.Optional[str] = typer.Option(
         "once=dc",
-        help="Boot options (no|false|none|nil|null == disable)",
+        help="Boot options (Set to '-' to disable)",
         parser=str_or_none,
     ),
     vga: typing.Optional[str] = typer.Option(
         "virtio",
-        help="Setup VGA (virtio)",
+        help="Setup VGA (Set to '-' to disable)",
         parser=str_or_none,
     ),
     boot_mode: meta.BootMode = typer.Option(meta.BootMode.LEGACY, help="Boot mode"),
