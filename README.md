@@ -91,10 +91,7 @@ Install Mesa3D driver https://github.com/pal1000/mesa-dist-win/releases
         mknod -m 666 /dev/dri/renderD128 c 226 128
         ```
 
-<<<<<<< HEAD 2. `weiyang/container run *** --vga no ext-args -- -display egl-headless -device virtio-vga-gl`
-======= 2. Run image with `run *** --vga - ext-args -- -display egl-headless -device virtio-vga-gl`
-
-> > > > > > > 49a9c9c (Update readme)
+2.  Run image with `run *** --vga - ext-args -- -display egl-headless -device virtio-vga-gl`
 
 ## Container capability limits
 
