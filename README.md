@@ -76,13 +76,30 @@ Then you can:
     7. `ext-args -- -cpu host` host-passthrough cpu mode, all flags after `ext-args --` will be passed to qemu
     8. VirtIO iso is recommended for best performance
 
-### Container capability limits
+#### OpenGL Support
+
+Install Mesa3D driver https://github.com/pal1000/mesa-dist-win/releases
+
+#### Better Graphical Performance
+
+1.  Run docker with `--device=/dev/dri`
+
+        If `/dev/dri` not exists, try create by:
+        ```
+        mkdir -m 755 /dev/dri
+        mknod -m 666 /dev/dri/card0 c 226 0
+        mknod -m 666 /dev/dri/renderD128 c 226 128
+        ```
+
+2.  `weiyang/container run *** --vga no ext-args -- -display egl-headless -device virtio-vga-gl`
+
+## Container capability limits
 
 1. Minimum capability requirement is `--cap-add=NET_ADMIN`, run with `--no-accel`
 2. `--device-cgroup-rule='c *:* rwm'`/`--macvlan` will enable macvlan, otherwise use tap bridge
 3. `--device=/dev/kvm`/`--no-accel` will disable IO acceleration, not recommended
 
-### Podman Support
+## Podman Support
 
          The testing for Podman is not yet complete; you may submit an Issue if needed.
 
@@ -106,31 +123,34 @@ Then you can:
 │ --arch                           [alpha|sparc|nios2|sh4|xtensa|avr|sparc64|riscv32|m68k|tricore|microblaze  VM arch [default: x86_64]                                                   │
 │                                  |cris|mipsel|sh4eb|aarch64|loongarch64|ppc|hppa|mips64el|or1k|i386|mips64                                                                              │
 │                                  |rx|microblazeel|riscv64|xtensaeb|mips|x86_64|s390x|arm|ppc64]                                                                                         │
-│ --iso                            PATH                                                                       ISO file path [default: None]                                               │
+│ --iso                            TEXT                                                                       ISO file path or drive url [default: None]                                  │
 │ --accel          --no-accel                                                                                 Enable acceleration [default: accel]                                        │
-│ --macvlan        --no-macvlan                                                                               Enable macvlan network, otherwise use bridge network [default: macvlan]     │
+│ --macvlan        --no-macvlan                                                                               Enable macvlan network, otherwise use bridge network [default: no-macvlan]  │
 │ --netdev         --no-netdev                                                                                Setup netdev or not [default: netdev]                                       │
 │ --dhcp           --no-dhcp                                                                                  Enable DHCP [default: dhcp]                                                 │
 │ --vnc-web        --no-vnc-web                                                                               Enable VNC web client (noVNC) [default: vnc-web]                            │
 │ --console        --no-console                                                                               Enable Qemu monitor (mon+telnet+qmp) [default: console]                     │
 │ --machine                        TEXT                                                                       Machine type [default: None]                                                │
-│ --boot                           STR_OR_NONE                                                                Boot options [default: once=dc]                                             │
+│ --boot                           STR_OR_NONE                                                                Boot options (no|false|none|nil|null == disable) [default: once=dc]         │
+│ --vga                            STR_OR_NONE                                                                Setup VGA (virtio) [default: virtio]                                        │
 │ --boot-mode                      [uefi|secure|windows|legacy]                                               Boot mode [default: legacy]                                                 │
 │ --iface                          TEXT                                                                       (multiple) Special VM network interface (e.g. eth1)                         │
 │ --network                        TEXT                                                                       (multiple) Special VM network CIDR (IPv4) (e.g. 192.168.1.0/24)             │
+│ --dry            --no-dry                                                                                   Dry run [default: no-dry]                                                   │
 │ --help                                                                                                      Show this message and exit.                                                 │
 ╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 ╭─ Commands ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
-│ apply-disk                                                      Apply VM disk                                                                                                           │
-│ ext-args                                                        External Qemu args                                                                                                      │
-│ port-forward                                                    Forward VM ports                                                                                                        │
-│ windows                                                         Windows specific options                                                                                                │
+│ apply-disk                                   Apply VM disk                                                                                                                              │
+│ exec-sh                                      Exec shell script files before start Qemu                                                                                                  │
+│ ext-args                                     External Qemu args                                                                                                                         │
+│ port-forward                                 Forward VM ports                                                                                                                           │
+│ windows                                      Windows specific options                                                                                                                   │
 ╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 ```
 
 ### Apply Disk
 
-    `run xxx apply-disk -s 64G -n hda apply-disk -s 32G hdb`
+    `run xxx apply-disk -s 64G -n hda apply-disk -s 32G -n hdb`
 
 ```
 ❯ python main.py run apply-disk --help

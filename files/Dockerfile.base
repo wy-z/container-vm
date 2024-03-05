@@ -12,7 +12,7 @@ RUN set -e \
     qemu-utils \
     qemu-block-extra \
     qemu-system-modules-opengl \
-    # for virtio-vga-gl
+    # for egl-headless and virtio-vga-gl
     xserver-xorg-video-all \
     ovmf \
     wget \
