@@ -83,14 +83,6 @@ Install Mesa3D driver https://github.com/pal1000/mesa-dist-win/releases
 #### Better Graphical Performance
 
 1.  Run docker with `--device=/dev/dri`
-
-        If `/dev/dri` not exists, try create by:
-        ```
-        mkdir -m 755 /dev/dri
-        mknod -m 666 /dev/dri/card0 c 226 0
-        mknod -m 666 /dev/dri/renderD128 c 226 128
-        ```
-
 2.  Run image with `run *** --vga - ext-args -- -display egl-headless -device virtio-vga-gl`
 
 ## Container capability limits
