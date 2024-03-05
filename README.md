@@ -91,7 +91,10 @@ Install Mesa3D driver https://github.com/pal1000/mesa-dist-win/releases
         mknod -m 666 /dev/dri/renderD128 c 226 128
         ```
 
-2.  `weiyang/container run *** --vga no ext-args -- -display egl-headless -device virtio-vga-gl`
+<<<<<<< HEAD 2. `weiyang/container run *** --vga no ext-args -- -display egl-headless -device virtio-vga-gl`
+======= 2. Run image with `run *** --vga - ext-args -- -display egl-headless -device virtio-vga-gl`
+
+> > > > > > > 49a9c9c (Update readme)
 
 ## Container capability limits
 
@@ -131,8 +134,8 @@ Install Mesa3D driver https://github.com/pal1000/mesa-dist-win/releases
 │ --vnc-web        --no-vnc-web                                                                               Enable VNC web client (noVNC) [default: vnc-web]                            │
 │ --console        --no-console                                                                               Enable Qemu monitor (mon+telnet+qmp) [default: console]                     │
 │ --machine                        TEXT                                                                       Machine type [default: None]                                                │
-│ --boot                           STR_OR_NONE                                                                Boot options (no|false|none|nil|null == disable) [default: once=dc]         │
-│ --vga                            STR_OR_NONE                                                                Setup VGA (virtio) [default: virtio]                                        │
+│ --boot                           STR_OR_NONE                                                                Boot options (Set to '-' to disable) [default: once=dc]                     │
+│ --vga                            STR_OR_NONE                                                                Setup VGA (Set to '-' to disable) [default: virtio]                         │
 │ --boot-mode                      [uefi|secure|windows|legacy]                                               Boot mode [default: legacy]                                                 │
 │ --iface                          TEXT                                                                       (multiple) Special VM network interface (e.g. eth1)                         │
 │ --network                        TEXT                                                                       (multiple) Special VM network CIDR (IPv4) (e.g. 192.168.1.0/24)             │
