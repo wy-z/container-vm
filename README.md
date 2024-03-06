@@ -65,7 +65,7 @@ Then you can:
         apply-disk -s 64G -n hda
     ```
 
-         On MacOS, rm `--device=/dev/kvm` and `ext-args -- -cpu host`
+        On MacOS, rm `--device=/dev/kvm` and `ext-args -- -cpu host`
 
     1. `--cap-add=NET_ADMIN` is necessary for network configuration
     2. `--device-cgroup-rule='c *:* rwm'` is necessary for macvlan, or disable by `--no-macvlan`
@@ -91,12 +91,26 @@ Install Mesa3D driver https://github.com/pal1000/mesa-dist-win/releases
 2. `--device-cgroup-rule='c *:* rwm'`/`--macvlan` will enable macvlan, otherwise use tap bridge
 3. `--device=/dev/kvm`/`--no-accel` will disable IO acceleration, not recommended
 
+## Custom Actions
+
+1. Write custom shell script to `/tmp/setup.sh`, e.g.
+
+```sh
+set -e
+apt update
+apt install -y glusterfs-common
+```
+
+2. Run docker with `-v /tmp:/tmp`
+
+3. Run image with `run *** exec-sh -f /tmp/setup.sh`
+
 ## Podman Support
 
-         The testing for Podman is not yet complete; you may submit an Issue if needed.
+The testing for Podman is not yet complete; you may submit an Issue if needed.
 
-    - May need to add more capabilities, such as `--cap-add NET_RAW`
-    - May need to add more devices, such as `--device=/dev/net/tun`
+- May need to add more capabilities, such as `--cap-add NET_RAW`
+- May need to add more devices, such as `--device=/dev/net/tun`
 
 ## CLI Commands
 
