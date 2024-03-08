@@ -128,6 +128,7 @@ class Config(pydantic.BaseModel):
     vga: str | None = None
     ifaces: list[str] = []
     networks: list[ipaddress.IPv4Network] = []
+    ip_addrs: list[ipaddress.IPv4Address] = []
     extra_args: str = ""
     win_opts: WinOpts | None = None
     port_forwards: list[str] | None = None

@@ -72,6 +72,11 @@ def main(
         "--network",
         help="(multiple) Special VM network CIDR (IPv4) (e.g. 192.168.1.0/24)",
     ),
+    ip_addrs: list[str] = typer.Option(
+        [],
+        "--ip",
+        help="(multiple) Special VM network IP address (IPv4) (e.g. 192.168.1.1)",
+    ),
     dry: bool = typer.Option(default=False, help="Dry run"),
 ):
     meta.config.update(
@@ -91,6 +96,7 @@ def main(
         boot=boot,
         ifaces=ifaces,
         networks=[ipaddress.IPv4Network(n, strict=False) for n in networks],
+        ip_addrs=[ipaddress.IPv4Address(n) for n in ip_addrs],
         dry_run=dry,
     )
 

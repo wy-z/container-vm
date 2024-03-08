@@ -142,6 +142,7 @@ The testing for Podman is not yet complete; you may submit an Issue if needed.
 │ --boot-mode                      [uefi|secure|windows|legacy]                                               Boot mode [default: legacy]                                                 │
 │ --iface                          TEXT                                                                       (multiple) Special VM network interface (e.g. eth1)                         │
 │ --network                        TEXT                                                                       (multiple) Special VM network CIDR (IPv4) (e.g. 192.168.1.0/24)             │
+│ --ip                             TEXT                                                                       (multiple) Special VM network IP address (IPv4) (e.g. 192.168.1.1)          │
 │ --dry            --no-dry                                                                                   Dry run [default: no-dry]                                                   │
 │ --help                                                                                                      Show this message and exit.                                                 │
 ╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯

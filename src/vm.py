@@ -189,8 +189,15 @@ def setup_bridge(
     new_ip = None
     if ipnet:
         network = ipaddress.IPv4Network(ipnet, strict=False)
-        log.info(f"finding available ip in '{network}' ...")
-        new_ip = get_unused_ip(network)
+        # try c.ip_addrs
+        for ip in meta.config.ip_addrs:
+            if ip in network:
+                new_ip = str(ip)
+                break
+        # try find
+        if not new_ip:
+            log.info(f"finding available ip in '{network}' ...")
+            new_ip = get_unused_ip(network)
         if not new_ip:
             raise EnvironmentError(f"no available ip in '{ipnet}'")
     return new_mac, (new_ip + "/" + ipnet.split("/")[1]) if new_ip else None
